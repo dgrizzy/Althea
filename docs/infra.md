@@ -41,3 +41,4 @@ Althea infrastructure is provisioned via Terraform under `infra/terraform`.
 Bootstrap helper:
 
 - `scripts/bootstrap_gsm_secrets.sh` prompts for required keys and writes them as Secret Manager versions.
+- GitHub App-specific runbook: [docs/github-app.md](/Users/davidgriswold/Desktop/Althea/docs/github-app.md)

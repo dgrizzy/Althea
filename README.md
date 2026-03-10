@@ -22,6 +22,7 @@ Tasking is expected to happen directly through OpenClaw's native Telegram bot ("
 Use OpenClaw's own Telegram channel configuration for command/control and approvals.
 
 - Telegram/OpenClaw wiring notes: [docs/openclaw.md](/Users/davidgriswold/Desktop/Althea/docs/openclaw.md)
+- GitHub App auth wiring notes: [docs/github-app.md](/Users/davidgriswold/Desktop/Althea/docs/github-app.md)
 - Tailscale ops notes: [docs/tailscale.md](/Users/davidgriswold/Desktop/Althea/docs/tailscale.md)
 
 ## Infra
