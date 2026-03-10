@@ -1,6 +1,14 @@
 {
   gateway: {
-    mode: "local"
+    mode: "local",
+    controlUi: {
+      allowedOrigins: [
+        "http://127.0.0.1:18789",
+        "http://localhost:18789",
+        "http://amplify-bots-vm-1.tail4f8fba.ts.net:18789",
+        "http://100.111.157.54:18789"
+      ]
+    }
   },
   channels: {
     telegram: {
