@@ -37,10 +37,16 @@ terraform apply tfplan
 ```
 
 After apply:
-- Use output `service_url` to check health.
+- Use output `service_url` to get the access target.
 - Ensure `bootstrap_repo_url` points at your deployment repo so startup automation brings up the stack.
 - Lock down `admin_source_ranges` and `service_source_ranges` from `0.0.0.0/0` in production.
 - Bootstrap will copy `.env.example` to `.env` when missing before starting compose.
+
+Tailscale-only mode:
+
+- `expose_direct_service_port = false`
+- `enable_caddy_https = false`
+- Access service only through SSH/Tailscale tunnel (`http://127.0.0.1:<service_port>`).
 
 ## HTTPS reverse proxy pattern (Caddy)
 

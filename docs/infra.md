@@ -15,7 +15,8 @@ Althea infrastructure is provisioned via Terraform under `infra/terraform`.
 
 1. Copy `infra/terraform/terraform.tfvars.example` to `infra/terraform/terraform.tfvars`.
 2. Set `project_id`, `admin_source_ranges`, and `bootstrap_repo_url`.
-   If using HTTPS endpoint on the VM, also set `enable_caddy_https=true` and `public_service_domain`.
+   For Tailscale-only mode, set `expose_direct_service_port=false` and `enable_caddy_https=false`.
+   If using HTTPS endpoint on the VM, set `enable_caddy_https=true` and `public_service_domain`.
 3. Run:
    - `just infra-init`
    - `just infra-plan`

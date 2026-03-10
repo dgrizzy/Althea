@@ -10,7 +10,7 @@ output "vm_external_ip" {
 
 output "service_url" {
   value       = local.service_url
-  description = "Health endpoint URL for the deployed service"
+  description = "Service URL. If public ingress is disabled, this is the localhost tunnel URL."
 }
 
 output "secret_ids" {

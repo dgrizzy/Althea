@@ -7,7 +7,7 @@ Tasking is expected to happen directly through OpenClaw's native Telegram bot ("
 
 ## App behavior
 
-- Exposes only `GET /healthz`.
+- Exposes no public API routes.
 - No GitHub webhook ingestion.
 - No Telegram webhook ingestion.
 
@@ -15,7 +15,7 @@ Tasking is expected to happen directly through OpenClaw's native Telegram bot ("
 
 1. Copy `.env.example` to `.env`.
 2. Start stack: `just deploy`
-3. Check health: `curl http://localhost:8080/healthz`
+3. Check app container is up: `just logs althea`
 
 ## OpenClaw + Telegram
 

@@ -60,7 +60,7 @@ variable "service_port" {
 variable "expose_direct_service_port" {
   description = "Expose direct service port on VM firewall"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "enable_caddy_https" {

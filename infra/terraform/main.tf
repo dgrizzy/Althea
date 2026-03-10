@@ -35,7 +35,11 @@ locals {
   service_url = (
     var.enable_caddy_https && var.public_service_domain != ""
     ? "https://${var.public_service_domain}/healthz"
-    : "http://${google_compute_address.this.address}:${var.service_port}/healthz"
+    : (
+      var.expose_direct_service_port
+      ? "http://${google_compute_address.this.address}:${var.service_port}"
+      : "http://127.0.0.1:${var.service_port}"
+    )
   )
 }
 
