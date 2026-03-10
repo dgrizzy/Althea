@@ -1,7 +1,8 @@
 FROM node:22-bookworm-slim
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends git python3 make g++ \
+  && apt-get install -y --no-install-recommends ca-certificates git python3 make g++ \
+  && update-ca-certificates \
   && git config --global url."https://github.com/".insteadOf "ssh://git@github.com/" \
   && git config --global --add url."https://github.com/".insteadOf "git@github.com:" \
   && git config --global --add url."https://github.com/".insteadOf "git+ssh://git@github.com/" \
