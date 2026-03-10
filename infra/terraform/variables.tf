@@ -166,7 +166,7 @@ variable "initial_secret_keys" {
 }
 
 variable "initial_secret_values" {
-  description = "Initial values for known secrets (optional). Keys: tailscale_auth_key"
+  description = "Initial values for known secrets (optional). Keys: tailscale_auth_key, github_app_private_key"
   type        = map(string)
   default     = {}
   sensitive   = true
@@ -272,6 +272,42 @@ variable "openclaw_gateway_bind" {
   description = "OpenClaw gateway bind mode"
   type        = string
   default     = "lan"
+}
+
+variable "github_app_id" {
+  description = "GitHub App ID used to mint installation access tokens for gh CLI"
+  type        = string
+  default     = ""
+}
+
+variable "github_app_installation_id" {
+  description = "GitHub App installation ID scoped to allowed repos"
+  type        = string
+  default     = ""
+}
+
+variable "github_app_private_key_secret_id" {
+  description = "Existing Secret Manager secret ID containing GitHub App private key PEM (defaults to <name_prefix>-github-app-private-key)"
+  type        = string
+  default     = ""
+}
+
+variable "write_github_env_file" {
+  description = "Write GitHub App auth env vars into a locked-down env file on VM startup"
+  type        = bool
+  default     = true
+}
+
+variable "github_env_file_path" {
+  description = "Absolute path for generated GitHub env file"
+  type        = string
+  default     = "/opt/althea/runtime/github.env"
+}
+
+variable "github_app_private_key_path" {
+  description = "Absolute path for materialized GitHub App private key PEM file on VM"
+  type        = string
+  default     = "/opt/althea/runtime/github-app.pem"
 }
 
 variable "claude_code_anthropic_api_key_secret_id" {

@@ -1,7 +1,7 @@
 FROM node:22-bookworm-slim
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends ca-certificates git python3 make g++ \
+  && apt-get install -y --no-install-recommends ca-certificates git gh python3 make g++ \
   && update-ca-certificates \
   && git config --global url."https://github.com/".insteadOf "ssh://git@github.com/" \
   && git config --global --add url."https://github.com/".insteadOf "git@github.com:" \
@@ -9,6 +9,10 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 RUN npm install -g openclaw@latest
+
+COPY docker/scripts/gh-app-token.js /usr/local/bin/gh-app-token.js
+COPY docker/scripts/gh-wrapper.sh /usr/local/bin/gh
+RUN chmod 0755 /usr/local/bin/gh-app-token.js /usr/local/bin/gh
 
 WORKDIR /srv/openclaw
 

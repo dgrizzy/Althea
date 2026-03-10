@@ -202,6 +202,40 @@ EOF_OG
   chmod 0600 "${openclaw_gateway_env_file_path}"
 fi
 
+if [ "${write_github_env_file}" = "true" ]; then
+  GITHUB_ENV_DIR="$(dirname "${github_env_file_path}")"
+  install -d -m 0750 "$${GITHUB_ENV_DIR}"
+  : >"${github_env_file_path}"
+  chmod 0600 "${github_env_file_path}"
+
+  if [ -n "${github_app_id}" ] && [ -n "${github_app_installation_id}" ]; then
+    GITHUB_APP_PRIVATE_KEY_VALUE=""
+    if [ -n "${github_app_private_key_secret_id}" ]; then
+      GITHUB_APP_PRIVATE_KEY_VALUE="$(fetch_secret_latest "${project_id}" "${github_app_private_key_secret_id}" || true)"
+    fi
+
+    if [ -n "$${GITHUB_APP_PRIVATE_KEY_VALUE}" ]; then
+      GITHUB_KEY_DIR="$(dirname "${github_app_private_key_path}")"
+      install -d -m 0750 "$${GITHUB_KEY_DIR}"
+
+      umask 177
+      cat >"${github_app_private_key_path}" <<EOF_GH_KEY
+$${GITHUB_APP_PRIVATE_KEY_VALUE}
+EOF_GH_KEY
+      chmod 0600 "${github_app_private_key_path}"
+
+      cat >"${github_env_file_path}" <<EOF_GH_ENV
+GITHUB_APP_ID=${github_app_id}
+GITHUB_INSTALLATION_ID=${github_app_installation_id}
+GITHUB_APP_PRIVATE_KEY_PATH=${github_app_private_key_path}
+EOF_GH_ENV
+      chmod 0600 "${github_env_file_path}"
+    else
+      echo "GitHub App private key secret '${github_app_private_key_secret_id}' unavailable; leaving github env empty."
+    fi
+  fi
+fi
+
 if [ "${write_claude_code_env_file}" = "true" ] && [ -n "${claude_code_anthropic_api_key_secret_id}" ]; then
   CLAUDE_CODE_API_KEY_VALUE="$(fetch_secret_latest "${project_id}" "${claude_code_anthropic_api_key_secret_id}" || true)"
   if [ -n "$${CLAUDE_CODE_API_KEY_VALUE}" ]; then

@@ -82,6 +82,24 @@ with:
 
 If secret lookup is unavailable, startup will generate a local token once and reuse it from this file.
 
+## GitHub App auth for `gh` skill
+
+OpenClaw's bundled `github` skill requires `gh` CLI. The container image now installs `gh`.
+
+At runtime, VM startup can materialize:
+
+- `/opt/althea/runtime/github.env`
+- `/opt/althea/runtime/github-app.pem`
+
+with:
+
+- `GITHUB_APP_ID=<app-id>`
+- `GITHUB_INSTALLATION_ID=<installation-id>`
+- `GITHUB_APP_PRIVATE_KEY_PATH=/opt/althea/runtime/github-app.pem`
+
+`gh` is wrapped to mint a fresh installation token from the GitHub App on each invocation.
+This avoids long-lived PATs and keeps auth aligned with GitHub App repo scoping.
+
 ## Behavior
 
 - Commands are issued directly in Telegram to OpenClaw.

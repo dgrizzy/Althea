@@ -7,9 +7,10 @@ This stack provisions a VM-centric OpenClaw runtime host:
 - VM for runtime/bootstrap
 - Service account + IAM bindings
 - Secret Manager secret container for Tailscale auth key
+- Secret Manager secret container for GitHub App private key
 - Secret Manager secret container for OpenClaw gateway token
 - Optional Tailscale install + auto-join on VM bootstrap
-- Optional Telegram token/inference key/Claude Code key env-file materialization from Secret Manager
+- Optional Telegram token/inference key/GitHub App key/Claude Code key env-file materialization from Secret Manager
 - Optional Caddy HTTPS reverse proxy for the service endpoint
 
 ## Prereqs
@@ -92,6 +93,7 @@ On VM startup, Terraform can materialize env files for your runtime:
 - Telegram bot token: `/opt/althea/runtime/telegram.env`
 - OpenClaw inference key + model: `/opt/althea/runtime/inference.env`
 - OpenClaw gateway token/bind/port: `/opt/althea/runtime/openclaw.env`
+- GitHub App credentials for `gh`: `/opt/althea/runtime/github.env` + `/opt/althea/runtime/github-app.pem`
 - Claude Code key + model: `/opt/althea/runtime/claude-code.env`
 
 These values are fetched from Secret Manager IDs configured in `terraform.tfvars`.

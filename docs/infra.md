@@ -34,6 +34,8 @@ Althea infrastructure is provisioned via Terraform under `infra/terraform`.
 - Prefer Tailscale-only access and remove public DNS records if you do not need internet ingress.
 - Telegram token can be sourced from `telegram-reasonable-dev-bot` into `/opt/althea/runtime/telegram.env`.
 - Anthropic key can be sourced from `amplify-dev-bot-anthropic-api-openclaw` into `/opt/althea/runtime/inference.env`.
+- GitHub App private key can be sourced from `amplify-bots-github-app-private-key` into `/opt/althea/runtime/github-app.pem`.
+- GitHub App IDs can be set in Terraform and written into `/opt/althea/runtime/github.env`.
 - Claude Code Anthropic key can be sourced from `amplify-dev-bot-anthropic-api-claude-code` into `/opt/althea/runtime/claude-code.env`.
 
 Bootstrap helper:
