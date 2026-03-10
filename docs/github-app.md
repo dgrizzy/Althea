@@ -71,7 +71,7 @@ Optional repo-scope check:
 
 ```bash
 gcloud compute ssh amplify-bots-vm --project amplify-bots --zone us-central1-a \
-  --command 'cd /opt/althea/app && ./scripts/validate_github_app_runtime.sh app-openclaw-gateway-1 dgrizzy/dev-bot-que'
+  --command 'cd /opt/althea/app && ./scripts/validate_github_app_runtime.sh app-openclaw-gateway-1 dgrizzy/Amplify'
 ```
 
 If repo check fails with 404/403, the app is installed but not allowed on that repo.
