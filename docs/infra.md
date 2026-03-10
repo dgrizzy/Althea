@@ -38,6 +38,7 @@ Althea infrastructure is provisioned via Terraform under `infra/terraform`.
 - GitHub App IDs can be set in Terraform and written into `/opt/althea/runtime/github.env`.
 - GitHub PAT can be sourced from `github_pat` into `/opt/althea/runtime/github.env` as `GH_TOKEN`.
 - Claude Code Anthropic key can be sourced from `amplify-dev-bot-anthropic-api-claude-code` into `/opt/althea/runtime/claude-code.env`.
+- OpenClaw runtime state is persisted on disk at `openclaw/home` (mounted to `/root/.openclaw`).
 
 Bootstrap helper:
 

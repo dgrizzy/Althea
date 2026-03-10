@@ -7,6 +7,21 @@ No Althea Telegram webhook endpoint is used in this model.
 The runtime stack now includes an `openclaw-gateway` service in [docker-compose.yml](/Users/davidgriswold/Desktop/Althea/docker-compose.yml).
 Gateway port defaults to `18789`.
 
+## Persistence model
+
+OpenClaw runtime state is persisted outside the container filesystem via:
+
+- `OPENCLAW_HOME_DIR` (default `./openclaw/home`) mounted at `/root/.openclaw`
+
+This keeps memory/session history/workspace and channel credentials durable across
+container restarts/recreates.
+
+Backup/restore example (on VM):
+
+```bash
+tar -czf /opt/althea/runtime/openclaw-home-backup.tgz -C /opt/althea/app openclaw/home
+```
+
 ## Required OpenClaw runtime config
 
 - Enable Telegram channel integration in OpenClaw.

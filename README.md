@@ -10,6 +10,7 @@ Tasking is expected to happen directly through OpenClaw's native Telegram bot ("
 - Runs OpenClaw gateway as the primary service.
 - Telegram is handled natively by OpenClaw channels.
 - No GitHub webhook ingestion.
+- OpenClaw runtime state persists in `openclaw/home` (mounted as `/root/.openclaw`).
 
 ## Local run
 

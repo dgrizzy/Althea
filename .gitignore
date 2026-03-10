@@ -10,3 +10,6 @@ infra/terraform/.terraform.lock.hcl
 infra/terraform/*.tfstate
 infra/terraform/*.tfstate.*
 infra/terraform/tfplan
+
+openclaw/home/
+openclaw/workspace/

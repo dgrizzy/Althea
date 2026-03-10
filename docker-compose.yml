@@ -14,6 +14,7 @@ services:
       - ${CLAUDE_CODE_ENV_FILE:-/opt/althea/runtime/claude-code.env}
     environment:
       OPENCLAW_CONFIG_PATH: /srv/openclaw/openclaw.json
+      OPENCLAW_HOME: /root/.openclaw
     command:
       - gateway
       - --bind
@@ -24,6 +25,7 @@ services:
       - "${OPENCLAW_BIND_HOST:-0.0.0.0}:${OPENCLAW_GATEWAY_PORT:-18789}:18789"
     volumes:
       - ./openclaw:/srv/openclaw
+      - ${OPENCLAW_HOME_DIR:-./openclaw/home}:/root/.openclaw
 
   openclaw-cli:
     image: althea-openclaw:local
@@ -38,7 +40,9 @@ services:
       - ${CLAUDE_CODE_ENV_FILE:-/opt/althea/runtime/claude-code.env}
     environment:
       OPENCLAW_CONFIG_PATH: /srv/openclaw/openclaw.json
+      OPENCLAW_HOME: /root/.openclaw
     entrypoint:
       - openclaw
     volumes:
       - ./openclaw:/srv/openclaw
+      - ${OPENCLAW_HOME_DIR:-./openclaw/home}:/root/.openclaw
