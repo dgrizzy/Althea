@@ -36,6 +36,7 @@ Althea infrastructure is provisioned via Terraform under `infra/terraform`.
 - Anthropic key can be sourced from `amplify-dev-bot-anthropic-api-openclaw` into `/opt/althea/runtime/inference.env`.
 - GitHub App private key can be sourced from `amplify-bots-github-app-private-key` into `/opt/althea/runtime/github-app.pem`.
 - GitHub App IDs can be set in Terraform and written into `/opt/althea/runtime/github.env`.
+- GitHub PAT can be sourced from `github_pat` into `/opt/althea/runtime/github.env` as `GH_TOKEN`.
 - Claude Code Anthropic key can be sourced from `amplify-dev-bot-anthropic-api-claude-code` into `/opt/althea/runtime/claude-code.env`.
 
 Bootstrap helper:

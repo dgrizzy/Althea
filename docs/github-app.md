@@ -2,6 +2,9 @@
 
 Use this when you want OpenClaw to act on a scoped set of GitHub repos without PATs.
 
+If you want to run PAT-first, set `github_pat_secret_id` in Terraform (for example `github_pat`).
+Startup will write PAT-derived `GH_TOKEN` into `/opt/althea/runtime/github.env`, and `gh` will use it immediately.
+
 ## 1) Create the GitHub App
 
 In GitHub (`Settings` -> `Developer settings` -> `GitHub Apps` -> `New GitHub App`):

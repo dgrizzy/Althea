@@ -8,7 +8,7 @@ RUN apt-get update \
   && git config --global --add url."https://github.com/".insteadOf "git+ssh://git@github.com/" \
   && rm -rf /var/lib/apt/lists/*
 
-RUN npm install -g openclaw@latest
+RUN npm install -g openclaw@latest @anthropic-ai/claude-code@latest
 
 COPY docker/scripts/gh-app-token.js /usr/local/bin/gh-app-token.js
 COPY docker/scripts/gh-wrapper.sh /usr/local/bin/gh

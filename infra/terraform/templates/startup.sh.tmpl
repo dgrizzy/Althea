@@ -207,6 +207,22 @@ if [ "${write_github_env_file}" = "true" ]; then
   install -d -m 0750 "$${GITHUB_ENV_DIR}"
   : >"${github_env_file_path}"
   chmod 0600 "${github_env_file_path}"
+  WROTE_GITHUB_AUTH="false"
+
+  if [ -n "${github_pat_secret_id}" ]; then
+    GITHUB_PAT_VALUE="$(fetch_secret_latest "${project_id}" "${github_pat_secret_id}" || true)"
+    if [ -n "$${GITHUB_PAT_VALUE}" ]; then
+      cat >>"${github_env_file_path}" <<EOF_GH_PAT
+GITHUB_PAT=$${GITHUB_PAT_VALUE}
+GH_TOKEN=$${GITHUB_PAT_VALUE}
+GITHUB_TOKEN=$${GITHUB_PAT_VALUE}
+EOF_GH_PAT
+      chmod 0600 "${github_env_file_path}"
+      WROTE_GITHUB_AUTH="true"
+    else
+      echo "GitHub PAT secret '${github_pat_secret_id}' unavailable; skipping PAT auth."
+    fi
+  fi
 
   if [ -n "${github_app_id}" ] && [ -n "${github_app_installation_id}" ]; then
     GITHUB_APP_PRIVATE_KEY_VALUE=""
@@ -224,15 +240,20 @@ $${GITHUB_APP_PRIVATE_KEY_VALUE}
 EOF_GH_KEY
       chmod 0600 "${github_app_private_key_path}"
 
-      cat >"${github_env_file_path}" <<EOF_GH_ENV
+      cat >>"${github_env_file_path}" <<EOF_GH_ENV
 GITHUB_APP_ID=${github_app_id}
 GITHUB_INSTALLATION_ID=${github_app_installation_id}
 GITHUB_APP_PRIVATE_KEY_PATH=${github_app_private_key_path}
 EOF_GH_ENV
       chmod 0600 "${github_env_file_path}"
+      WROTE_GITHUB_AUTH="true"
     else
-      echo "GitHub App private key secret '${github_app_private_key_secret_id}' unavailable; leaving github env empty."
+      echo "GitHub App private key secret '${github_app_private_key_secret_id}' unavailable; skipping App auth."
     fi
+  fi
+
+  if [ "$${WROTE_GITHUB_AUTH}" != "true" ]; then
+    echo "No GitHub auth materialized; gh will be unauthenticated."
   fi
 fi
 
@@ -244,7 +265,9 @@ if [ "${write_claude_code_env_file}" = "true" ] && [ -n "${claude_code_anthropic
     umask 177
     cat >"${claude_code_env_file_path}" <<EOF_CC
 ANTHROPIC_API_KEY=$${CLAUDE_CODE_API_KEY_VALUE}
+ANTHROPIC_MODEL=${claude_code_model}
 CLAUDE_CODE_MODEL=${claude_code_model}
+CLAUDE_CODE_SUBAGENT_MODEL=${claude_code_subagent_model}
 EOF_CC
     chmod 0600 "${claude_code_env_file_path}"
   else

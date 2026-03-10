@@ -14,27 +14,41 @@ if ! docker ps --format '{{.Names}}' | grep -Fxq "${CONTAINER_NAME}"; then
   exit 1
 fi
 
-echo "[1/5] Checking GitHub App env vars inside ${CONTAINER_NAME}"
-docker exec "${CONTAINER_NAME}" sh -lc '
-  for key in GITHUB_APP_ID GITHUB_INSTALLATION_ID GITHUB_APP_PRIVATE_KEY_PATH; do
-    if [ -z "${!key:-}" ]; then
-      echo "missing env var: ${key}" >&2
-      exit 1
+echo "[1/5] Checking GitHub auth material inside ${CONTAINER_NAME}"
+AUTH_MODE="$(
+  docker exec "${CONTAINER_NAME}" sh -lc '
+    if [ -n "${GITHUB_PAT:-}" ] || [ -n "${GH_TOKEN:-}" ] || [ -n "${GITHUB_TOKEN:-}" ]; then
+      echo "pat"
+      exit 0
     fi
-  done
-  if [ ! -s "${GITHUB_APP_PRIVATE_KEY_PATH}" ]; then
-    echo "missing or empty private key file: ${GITHUB_APP_PRIVATE_KEY_PATH}" >&2
-    exit 1
-  fi
-'
 
-echo "[2/5] Minting installation token"
-docker exec "${CONTAINER_NAME}" /usr/local/bin/gh-app-token.js --json
+    if [ -n "${GITHUB_APP_ID:-}" ] && [ -n "${GITHUB_INSTALLATION_ID:-}" ] && [ -n "${GITHUB_APP_PRIVATE_KEY_PATH:-}" ] && [ -s "${GITHUB_APP_PRIVATE_KEY_PATH}" ]; then
+      echo "app"
+      exit 0
+    fi
 
-echo "[3/5] Verifying gh wrapper is available"
+    echo "none"
+  '
+)"
+
+if [ "${AUTH_MODE}" = "none" ]; then
+  echo "No GitHub auth configured (neither PAT nor App)." >&2
+  exit 1
+fi
+
+echo "Auth mode detected: ${AUTH_MODE}"
+
+echo "[2/5] Verifying gh wrapper is available"
 docker exec "${CONTAINER_NAME}" sh -lc 'gh --version | head -n1'
 
-echo "[4/5] Calling GitHub API with app installation token"
+if [ "${AUTH_MODE}" = "app" ]; then
+  echo "[3/5] Minting installation token"
+  docker exec "${CONTAINER_NAME}" /usr/local/bin/gh-app-token.js --json
+else
+  echo "[3/5] PAT mode selected; token minting step skipped"
+fi
+
+echo "[4/5] Calling GitHub API with configured auth"
 docker exec "${CONTAINER_NAME}" sh -lc 'gh api /rate_limit --jq ".rate.remaining"'
 
 if [ -n "${TARGET_REPO}" ]; then
@@ -44,4 +58,4 @@ else
   echo "[5/5] Repo visibility check skipped (no repo arg provided)"
 fi
 
-echo "GitHub App runtime validation passed."
+echo "GitHub runtime validation passed."

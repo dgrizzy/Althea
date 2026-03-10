@@ -50,6 +50,7 @@ openclaw_gateway_bind            = "lan"
 github_app_id                    = ""
 github_app_installation_id       = ""
 github_app_private_key_secret_id = ""
+github_pat_secret_id             = "github_pat"
 write_github_env_file            = true
 github_env_file_path             = "/opt/althea/runtime/github.env"
 github_app_private_key_path      = "/opt/althea/runtime/github-app.pem"
@@ -58,6 +59,7 @@ claude_code_anthropic_api_key_secret_id = "amplify-dev-bot-anthropic-api-claude-
 write_claude_code_env_file              = true
 claude_code_env_file_path               = "/opt/althea/runtime/claude-code.env"
 claude_code_model                       = "haiku"
+claude_code_subagent_model              = "haiku"
 
 create_secret_versions = false
 initial_secret_keys    = []

@@ -93,10 +93,19 @@ On VM startup, Terraform can materialize env files for your runtime:
 - Telegram bot token: `/opt/althea/runtime/telegram.env`
 - OpenClaw inference key + model: `/opt/althea/runtime/inference.env`
 - OpenClaw gateway token/bind/port: `/opt/althea/runtime/openclaw.env`
-- GitHub App credentials for `gh`: `/opt/althea/runtime/github.env` + `/opt/althea/runtime/github-app.pem`
+- GitHub credentials for `gh` (PAT and/or App): `/opt/althea/runtime/github.env` + optional `/opt/althea/runtime/github-app.pem`
 - Claude Code key + model: `/opt/althea/runtime/claude-code.env`
 
 These values are fetched from Secret Manager IDs configured in `terraform.tfvars`.
+
+For PAT-first GitHub auth, set:
+
+- `github_pat_secret_id = "github_pat"`
+
+For Claude Code execution path, ensure:
+
+- `claude_code_anthropic_api_key_secret_id` points to your Claude Code key secret
+- `claude_code_model` and `claude_code_subagent_model` are set to your desired model aliases
 
 ## Notes
 

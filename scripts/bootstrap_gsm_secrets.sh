@@ -67,22 +67,25 @@ add_multiline_secret() {
 echo "Using project: $PROJECT_ID"
 gcloud config set project "$PROJECT_ID" >/dev/null
 
-echo "\n[1/6] Tailscale auth key (from Tailscale admin console)"
+echo "\n[1/7] Tailscale auth key (from Tailscale admin console)"
 add_prompted_secret "amplify-bots-tailscale-auth-key" "Enter tailscale auth key (tskey-...)"
 
-echo "\n[2/6] Telegram bot token"
+echo "\n[2/7] Telegram bot token"
 add_prompted_secret "telegram-reasonable-dev-bot" "Enter Telegram bot token"
 
-echo "\n[3/6] Anthropic key for OpenClaw"
+echo "\n[3/7] Anthropic key for OpenClaw"
 add_prompted_secret "amplify-dev-bot-anthropic-api-openclaw" "Enter Anthropic API key for OpenClaw"
 
-echo "\n[4/6] Anthropic key for Claude Code"
+echo "\n[4/7] Anthropic key for Claude Code"
 add_prompted_secret "amplify-dev-bot-anthropic-api-claude-code" "Enter Anthropic API key for Claude Code"
 
-echo "\n[5/6] GitHub App private key (PEM)"
+echo "\n[5/7] GitHub App private key (PEM)"
 add_multiline_secret "amplify-bots-github-app-private-key" "Paste full PEM including BEGIN/END lines"
 
-echo "\n[6/6] OpenClaw gateway token (generated)"
+echo "\n[6/7] GitHub PAT (optional)"
+add_prompted_secret "github_pat" "Enter GitHub personal access token"
+
+echo "\n[7/7] OpenClaw gateway token (generated)"
 ensure_secret "amplify-bots-openclaw-gateway-token"
 python3 - <<'PY' | add_version_from_stdin "amplify-bots-openclaw-gateway-token"
 import secrets
@@ -96,6 +99,7 @@ for secret in \
   amplify-dev-bot-anthropic-api-openclaw \
   amplify-dev-bot-anthropic-api-claude-code \
   amplify-bots-github-app-private-key \
+  github_pat \
   amplify-bots-openclaw-gateway-token
   do
     echo "--- $secret"

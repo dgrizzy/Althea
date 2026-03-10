@@ -229,6 +229,7 @@ resource "google_compute_instance" "this" {
     github_app_id                           = var.github_app_id
     github_app_installation_id              = var.github_app_installation_id
     github_app_private_key_secret_id        = var.github_app_private_key_secret_id != "" ? var.github_app_private_key_secret_id : local.secret_ids["github_app_private_key"]
+    github_pat_secret_id                    = var.github_pat_secret_id
     write_github_env_file                   = var.write_github_env_file
     github_env_file_path                    = var.github_env_file_path
     github_app_private_key_path             = var.github_app_private_key_path
@@ -236,6 +237,7 @@ resource "google_compute_instance" "this" {
     write_claude_code_env_file              = var.write_claude_code_env_file
     claude_code_env_file_path               = var.claude_code_env_file_path
     claude_code_model                       = var.claude_code_model
+    claude_code_subagent_model              = var.claude_code_subagent_model
   })
 
   depends_on = [

@@ -292,8 +292,14 @@ variable "github_app_private_key_secret_id" {
   default     = ""
 }
 
+variable "github_pat_secret_id" {
+  description = "Existing Secret Manager secret ID containing a GitHub PAT for gh/automation tooling (optional)"
+  type        = string
+  default     = ""
+}
+
 variable "write_github_env_file" {
-  description = "Write GitHub App auth env vars into a locked-down env file on VM startup"
+  description = "Write GitHub auth env vars (PAT and/or App) into a locked-down env file on VM startup"
   type        = bool
   default     = true
 }
@@ -330,6 +336,12 @@ variable "claude_code_env_file_path" {
 
 variable "claude_code_model" {
   description = "Default model identifier hint for Claude Code runtime (set to your preferred Haiku model id)"
+  type        = string
+  default     = "haiku"
+}
+
+variable "claude_code_subagent_model" {
+  description = "Model alias/name for Claude Code subagents (maps to CLAUDE_CODE_SUBAGENT_MODEL)"
   type        = string
   default     = "haiku"
 }

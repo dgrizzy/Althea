@@ -65,9 +65,14 @@ and writes:
 with:
 
 - `ANTHROPIC_API_KEY=<key>`
+- `ANTHROPIC_MODEL=haiku`
 - `CLAUDE_CODE_MODEL=haiku`
+- `CLAUDE_CODE_SUBAGENT_MODEL=haiku`
 
 Use this env file for the Claude Code runtime/process (keep it separate from OpenClaw inference env if you want clean key isolation).
+
+The container image installs `@anthropic-ai/claude-code`, which exposes the `claude` CLI
+expected by OpenClaw's `coding-agent` skill.
 
 Additional gateway env is written to:
 
@@ -82,7 +87,7 @@ with:
 
 If secret lookup is unavailable, startup will generate a local token once and reuse it from this file.
 
-## GitHub App auth for `gh` skill
+## GitHub auth for `gh` skill (PAT or App)
 
 OpenClaw's bundled `github` skill requires `gh` CLI. The container image now installs `gh`.
 
@@ -93,12 +98,19 @@ At runtime, VM startup can materialize:
 
 with:
 
+- `GITHUB_PAT=<pat>` (optional)
+- `GH_TOKEN=<pat>` (optional; set from PAT)
+- `GITHUB_TOKEN=<pat>` (optional; set from PAT)
 - `GITHUB_APP_ID=<app-id>`
 - `GITHUB_INSTALLATION_ID=<installation-id>`
 - `GITHUB_APP_PRIVATE_KEY_PATH=/opt/althea/runtime/github-app.pem`
 
-`gh` is wrapped to mint a fresh installation token from the GitHub App on each invocation.
-This avoids long-lived PATs and keeps auth aligned with GitHub App repo scoping.
+`gh` wrapper precedence is:
+
+1. Use `GH_TOKEN`/`GITHUB_TOKEN`/`GITHUB_PAT` if present.
+2. Otherwise mint a fresh installation token from GitHub App credentials.
+
+This lets you run PAT-first now, then move to App auth later without changing container wiring.
 
 ## Behavior
 
