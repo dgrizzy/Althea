@@ -1,0 +1,69 @@
+name: Althea Task
+description: Structured task request for Althea
+title: "[Althea] "
+labels: ["althea:queued"]
+body:
+  - type: dropdown
+    id: task_type
+    attributes:
+      label: Task Type
+      options:
+        - bugfix
+        - feature
+        - ops
+        - docs
+        - other
+    validations:
+      required: true
+
+  - type: input
+    id: target_repo
+    attributes:
+      label: Target Repo
+      placeholder: my-org/my-repo
+    validations:
+      required: true
+
+  - type: input
+    id: target_branch
+    attributes:
+      label: Target Branch
+      placeholder: main
+
+  - type: dropdown
+    id: risk_level
+    attributes:
+      label: Risk Level
+      options:
+        - low
+        - medium
+        - high
+    validations:
+      required: true
+
+  - type: dropdown
+    id: execution_mode
+    attributes:
+      label: Execution Mode
+      options:
+        - plan-only
+        - execute
+    validations:
+      required: true
+
+  - type: textarea
+    id: desired_outcome
+    attributes:
+      label: Desired Outcome
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints
