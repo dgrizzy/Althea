@@ -8,9 +8,9 @@ output "vm_external_ip" {
   description = "Public static IP for ingress"
 }
 
-output "webhook_url" {
-  value       = local.webhook_url
-  description = "Webhook URL to configure in GitHub"
+output "service_url" {
+  value       = local.service_url
+  description = "Health endpoint URL for the deployed service"
 }
 
 output "secret_ids" {
@@ -19,4 +19,9 @@ output "secret_ids" {
     key => secret.secret_id
   }
   description = "Created Secret Manager secret IDs"
+}
+
+output "caddy_data_disk_name" {
+  value       = try(google_compute_disk.caddy_data[0].name, null)
+  description = "Persistent disk name used for Caddy cert/state storage"
 }

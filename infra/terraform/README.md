@@ -1,17 +1,15 @@
 # Althea Terraform (GCP)
 
-This stack provisions first-pass infrastructure for Althea:
+This stack provisions a VM-centric OpenClaw runtime host:
 - VPC + subnet
-- Firewall rules (SSH + webhook ingress)
+- Firewall rules (SSH + optional service ingress)
 - Static external IP
-- VM for OpenClaw + Althea runtime
+- VM for runtime/bootstrap
 - Service account + IAM bindings
-- Secret Manager secrets for core credentials
+- Secret Manager secret container for Tailscale auth key
 - Optional Tailscale install + auto-join on VM bootstrap
-- Optional Telegram bot token env-file materialization from Secret Manager
-- Optional Anthropic inference key env-file materialization from Secret Manager
-- Optional Claude Code Anthropic key env-file materialization from Secret Manager
-- Optional Caddy HTTPS reverse proxy provisioning for GitHub webhook endpoint
+- Optional Telegram token/inference key/Claude Code key env-file materialization from Secret Manager
+- Optional Caddy HTTPS reverse proxy for the service endpoint
 
 ## Prereqs
 
@@ -39,22 +37,29 @@ terraform apply tfplan
 ```
 
 After apply:
-- Use output `webhook_url` in GitHub webhook settings.
+- Use output `service_url` to check health.
 - Ensure `bootstrap_repo_url` points at your deployment repo so startup automation brings up the stack.
-- Lock down `webhook_source_ranges` from `0.0.0.0/0` to known CIDRs.
+- Lock down `admin_source_ranges` and `service_source_ranges` from `0.0.0.0/0` in production.
+- Bootstrap will copy `.env.example` to `.env` when missing before starting compose.
 
 ## HTTPS reverse proxy pattern (Caddy)
 
 Set these in `terraform.tfvars`:
 
 - `enable_caddy_https = true`
-- `public_webhook_domain = "bots.yourdomain.com"`
+- `public_service_domain = "bot.yourdomain.com"`
 - `caddy_acme_email = "ops@yourdomain.com"` (optional, recommended)
-- `expose_direct_webhook_port = false` (recommended after cutover)
+- `caddy_acme_ca = "https://acme-v02.api.letsencrypt.org/directory"`
+- `enable_persistent_caddy_storage = true`
+- `caddy_data_disk_size_gb = 10`
+- `caddy_data_disk_type = "pd-balanced"`
+- `expose_direct_service_port = false` (recommended after cutover)
 
-When enabled, startup script installs Caddy, configures TLS, and proxies:
-
-- `https://<public_webhook_domain>/webhooks/github` -> `127.0.0.1:<webhook_port>`
+Bootstrap behavior is idempotent:
+- Caddy config is only reloaded when it changes.
+- If config is unchanged, bootstrap does not force a caddy restart.
+- Caddy is pinned to a single ACME issuer URL.
+- Cert state is persisted at `/var/lib/caddy`; do not wipe this path.
 
 ## Tailscale pattern
 
@@ -72,50 +77,17 @@ Auth key handling:
 - Startup script reads that secret and runs `tailscale up`.
 - You can override secret name with `tailscale_auth_key_secret_id`.
 
-## Telegram bot secret pattern
+## Runtime secret env-file pattern
 
-Defaults are prewired for your secret:
+On VM startup, Terraform can materialize env files for your runtime:
 
-- `telegram_bot_token_secret_id = "telegram-reasonable-dev-bot"`
-- `write_telegram_env_file = true`
-- `telegram_env_file_path = "/opt/althea/runtime/telegram.env"`
+- Telegram bot token: `/opt/althea/runtime/telegram.env`
+- OpenClaw inference key + model: `/opt/althea/runtime/inference.env`
+- Claude Code key + model: `/opt/althea/runtime/claude-code.env`
 
-On VM startup, the script fetches that secret and writes `TELEGRAM_BOT_TOKEN` to the env file with `0600` permissions.
-
-## Anthropic inference secret pattern
-
-Defaults are prewired for your secret:
-
-- `anthropic_api_key_secret_id = "amplify-dev-bot-anthropic-api-openclaw"`
-- `write_inference_env_file = true`
-- `inference_env_file_path = "/opt/althea/runtime/inference.env"`
-- `openclaw_primary_model = "haiku"`
-
-On VM startup, the script fetches that secret and writes:
-
-- `ANTHROPIC_API_KEY`
-- `OPENCLAW_PRIMARY_MODEL`
-
-to the env file with `0600` permissions.
-
-## Claude Code Anthropic secret pattern
-
-Defaults are prewired for your secret:
-
-- `claude_code_anthropic_api_key_secret_id = "amplify-dev-bot-anthropic-api-claude-code"`
-- `write_claude_code_env_file = true`
-- `claude_code_env_file_path = "/opt/althea/runtime/claude-code.env"`
-- `claude_code_model = "haiku"`
-
-On VM startup, the script fetches that secret and writes:
-
-- `ANTHROPIC_API_KEY`
-- `CLAUDE_CODE_MODEL`
-
-to the env file with `0600` permissions.
+These values are fetched from Secret Manager IDs configured in `terraform.tfvars`.
 
 ## Notes
 
-- For production, use HTTPS termination in front of webhook ingress.
 - Initial secret versions are optional and disabled by default.
 - The startup script installs Docker and requires `bootstrap_repo_url` to clone and run compose.

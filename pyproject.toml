@@ -1,17 +1,14 @@
 [project]
 name = "althea"
 version = "0.1.0"
-description = "GitHub-native ingress service for OpenClaw task dispatch"
+description = "Lightweight runtime shell for OpenClaw Telegram-native control"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
   "fastapi>=0.116.0",
   "uvicorn[standard]>=0.35.0",
-  "httpx>=0.28.0",
   "pydantic>=2.11.0",
   "pydantic-settings>=2.10.0",
-  "PyJWT>=2.10.0",
-  "cryptography>=44.0.0",
 ]
 
 [project.optional-dependencies]

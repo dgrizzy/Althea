@@ -1,23 +1,27 @@
-project_id                 = "amplify-bots"
-region                     = "us-central1"
-zone                       = "us-central1-a"
-name_prefix                = "amplify-bots"
-machine_type               = "e2-standard-2"
-boot_disk_size_gb          = 40
-webhook_port               = 8080
-expose_direct_webhook_port = true
-enable_caddy_https         = true
-public_webhook_domain      = "bots.amplifydental.ai"
-caddy_acme_email           = ""
+project_id                      = "amplify-bots"
+region                          = "us-central1"
+zone                            = "us-central1-a"
+name_prefix                     = "amplify-bots"
+machine_type                    = "e2-standard-2"
+boot_disk_size_gb               = 40
+service_port                    = 8080
+expose_direct_service_port      = true
+enable_caddy_https              = true
+public_service_domain           = "bot.amplifydental.ai"
+caddy_acme_email                = ""
+caddy_acme_ca                   = "https://acme-v02.api.letsencrypt.org/directory"
+enable_persistent_caddy_storage = true
+caddy_data_disk_size_gb         = 10
+caddy_data_disk_type            = "pd-balanced"
 
 # Update these before apply.
 admin_source_ranges   = ["203.0.113.10/32"]
-webhook_source_ranges = ["0.0.0.0/0"]
+service_source_ranges = ["0.0.0.0/0"]
 
 ssh_username   = "amplify-admin"
 ssh_public_key = ""
 
-bootstrap_repo_url     = ""
+bootstrap_repo_url     = "https://github.com/dgrizzy/Althea.git"
 bootstrap_repo_ref     = "main"
 bootstrap_repo_dir     = "/opt/althea/app"
 bootstrap_compose_file = "docker-compose.yml"
@@ -46,8 +50,5 @@ claude_code_model                       = "haiku"
 create_secret_versions = false
 initial_secret_keys    = []
 initial_secret_values = {
-  github_webhook_secret  = ""
-  openclaw_hook_token    = ""
-  github_app_private_key = ""
-  tailscale_auth_key     = ""
+  tailscale_auth_key = ""
 }

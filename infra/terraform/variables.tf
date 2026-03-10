@@ -45,32 +45,32 @@ variable "admin_source_ranges" {
   default     = ["0.0.0.0/0"]
 }
 
-variable "webhook_source_ranges" {
-  description = "CIDR ranges allowed to reach the webhook port"
+variable "service_source_ranges" {
+  description = "CIDR ranges allowed to reach the public service endpoint"
   type        = list(string)
   default     = ["0.0.0.0/0"]
 }
 
-variable "webhook_port" {
-  description = "Public TCP port for Althea webhook ingress"
+variable "service_port" {
+  description = "TCP port where the app is exposed when using direct ingress"
   type        = number
   default     = 8080
 }
 
-variable "expose_direct_webhook_port" {
-  description = "Expose direct webhook ingress port on VM firewall"
+variable "expose_direct_service_port" {
+  description = "Expose direct service port on VM firewall"
   type        = bool
   default     = true
 }
 
 variable "enable_caddy_https" {
-  description = "Install and configure Caddy for HTTPS reverse proxy to Althea ingress"
+  description = "Install and configure Caddy for HTTPS reverse proxy to service_port"
   type        = bool
   default     = false
 }
 
-variable "public_webhook_domain" {
-  description = "Public DNS host for GitHub webhook endpoint, e.g. bots.example.com"
+variable "public_service_domain" {
+  description = "Public DNS host for service endpoint, e.g. bot.example.com"
   type        = string
   default     = ""
 }
@@ -79,6 +79,30 @@ variable "caddy_acme_email" {
   description = "Optional ACME email for certificate registration"
   type        = string
   default     = ""
+}
+
+variable "caddy_acme_ca" {
+  description = "ACME directory URL used by Caddy for certificate issuance"
+  type        = string
+  default     = "https://acme-v02.api.letsencrypt.org/directory"
+}
+
+variable "enable_persistent_caddy_storage" {
+  description = "Attach and mount a dedicated persistent disk at /var/lib/caddy so cert state survives VM recreation"
+  type        = bool
+  default     = true
+}
+
+variable "caddy_data_disk_size_gb" {
+  description = "Size of dedicated persistent disk for Caddy state"
+  type        = number
+  default     = 10
+}
+
+variable "caddy_data_disk_type" {
+  description = "Disk type for dedicated persistent Caddy state disk"
+  type        = string
+  default     = "pd-balanced"
 }
 
 variable "ssh_username" {
@@ -136,7 +160,7 @@ variable "initial_secret_keys" {
 }
 
 variable "initial_secret_values" {
-  description = "Initial values for known secrets (optional). Keys: github_webhook_secret, openclaw_hook_token, github_app_private_key, tailscale_auth_key"
+  description = "Initial values for known secrets (optional). Keys: tailscale_auth_key"
   type        = map(string)
   default     = {}
   sensitive   = true

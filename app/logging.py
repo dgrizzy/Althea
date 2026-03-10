@@ -12,7 +12,7 @@ class JsonFormatter(logging.Formatter):
             "level": record.levelname,
             "message": record.getMessage(),
         }
-        for key in ("delivery_id", "task_key", "decision", "error_type"):
+        for key in ("request_id", "operation", "error_type"):
             value = getattr(record, key, None)
             if value:
                 payload[key] = value

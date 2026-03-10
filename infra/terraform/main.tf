@@ -9,6 +9,7 @@ locals {
   subnet_name     = "${var.name_prefix}-subnet"
   vm_name         = "${var.name_prefix}-vm"
   service_account = "${var.name_prefix}-vm-sa"
+  caddy_data_disk = "${var.name_prefix}-caddy-data"
 
   required_services = toset([
     "compute.googleapis.com",
@@ -18,10 +19,7 @@ locals {
   ])
 
   secret_ids = {
-    github_webhook_secret  = "${var.name_prefix}-github-webhook-secret"
-    openclaw_hook_token    = "${var.name_prefix}-openclaw-hook-token"
-    github_app_private_key = "${var.name_prefix}-github-app-private-key"
-    tailscale_auth_key     = "${var.name_prefix}-tailscale-auth-key"
+    tailscale_auth_key = "${var.name_prefix}-tailscale-auth-key"
   }
 
   merged_metadata = merge(
@@ -34,10 +32,10 @@ locals {
     }
   )
 
-  webhook_url = (
-    var.enable_caddy_https && var.public_webhook_domain != ""
-    ? "https://${var.public_webhook_domain}/webhooks/github"
-    : "http://${google_compute_address.this.address}:${var.webhook_port}/webhooks/github"
+  service_url = (
+    var.enable_caddy_https && var.public_service_domain != ""
+    ? "https://${var.public_service_domain}/healthz"
+    : "http://${google_compute_address.this.address}:${var.service_port}/healthz"
   )
 }
 
@@ -74,24 +72,24 @@ resource "google_compute_firewall" "allow_ssh" {
   }
 }
 
-resource "google_compute_firewall" "allow_webhook" {
-  count         = var.expose_direct_webhook_port ? 1 : 0
-  name          = "${var.name_prefix}-allow-webhook"
+resource "google_compute_firewall" "allow_service" {
+  count         = var.expose_direct_service_port ? 1 : 0
+  name          = "${var.name_prefix}-allow-service"
   network       = google_compute_network.this.name
-  source_ranges = var.webhook_source_ranges
+  source_ranges = var.service_source_ranges
   target_tags   = ["althea-vm"]
 
   allow {
     protocol = "tcp"
-    ports    = [tostring(var.webhook_port)]
+    ports    = [tostring(var.service_port)]
   }
 }
 
-resource "google_compute_firewall" "allow_webhook_https" {
+resource "google_compute_firewall" "allow_service_https" {
   count         = var.enable_caddy_https ? 1 : 0
-  name          = "${var.name_prefix}-allow-webhook-https"
+  name          = "${var.name_prefix}-allow-service-https"
   network       = google_compute_network.this.name
-  source_ranges = var.webhook_source_ranges
+  source_ranges = var.service_source_ranges
   target_tags   = ["althea-vm"]
 
   allow {
@@ -103,6 +101,15 @@ resource "google_compute_firewall" "allow_webhook_https" {
 resource "google_compute_address" "this" {
   name   = "${var.name_prefix}-ip"
   region = var.region
+}
+
+resource "google_compute_disk" "caddy_data" {
+  count = var.enable_caddy_https && var.enable_persistent_caddy_storage ? 1 : 0
+
+  name = local.caddy_data_disk
+  zone = var.zone
+  type = var.caddy_data_disk_type
+  size = var.caddy_data_disk_size_gb
 }
 
 resource "google_service_account" "vm" {
@@ -143,11 +150,12 @@ resource "google_secret_manager_secret_version" "initial" {
 }
 
 resource "google_compute_instance" "this" {
-  name         = local.vm_name
-  machine_type = var.machine_type
-  zone         = var.zone
-  tags         = ["althea-vm"]
-  metadata     = local.merged_metadata
+  name                      = local.vm_name
+  machine_type              = var.machine_type
+  zone                      = var.zone
+  tags                      = ["althea-vm"]
+  metadata                  = local.merged_metadata
+  allow_stopping_for_update = true
 
   boot_disk {
     initialize_params {
@@ -162,6 +170,15 @@ resource "google_compute_instance" "this" {
 
     access_config {
       nat_ip = google_compute_address.this.address
+    }
+  }
+
+  dynamic "attached_disk" {
+    for_each = var.enable_caddy_https && var.enable_persistent_caddy_storage ? [1] : []
+    content {
+      source      = google_compute_disk.caddy_data[0].id
+      mode        = "READ_WRITE"
+      device_name = google_compute_disk.caddy_data[0].name
     }
   }
 
@@ -183,9 +200,12 @@ resource "google_compute_instance" "this" {
     tailscale_ssh                           = var.tailscale_ssh
     tailscale_accept_routes                 = var.tailscale_accept_routes
     enable_caddy_https                      = var.enable_caddy_https
-    public_webhook_domain                   = var.public_webhook_domain
+    public_service_domain                   = var.public_service_domain
     caddy_acme_email                        = var.caddy_acme_email
-    webhook_port                            = var.webhook_port
+    caddy_acme_ca                           = var.caddy_acme_ca
+    enable_persistent_caddy_storage         = var.enable_persistent_caddy_storage
+    caddy_data_disk_name                    = local.caddy_data_disk
+    service_port                            = var.service_port
     telegram_bot_token_secret_id            = var.telegram_bot_token_secret_id
     write_telegram_env_file                 = var.write_telegram_env_file
     telegram_env_file_path                  = var.telegram_env_file_path
@@ -203,7 +223,8 @@ resource "google_compute_instance" "this" {
     google_project_service.required,
     google_project_iam_member.vm_secret_accessor,
     google_project_iam_member.vm_log_writer,
-    google_compute_firewall.allow_webhook,
-    google_compute_firewall.allow_webhook_https,
+    google_compute_disk.caddy_data,
+    google_compute_firewall.allow_service,
+    google_compute_firewall.allow_service_https,
   ]
 }

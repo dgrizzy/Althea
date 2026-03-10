@@ -36,32 +36,77 @@ apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin do
 systemctl enable docker
 systemctl start docker
 
-if [ "${enable_caddy_https}" = "true" ]; then
-  if [ -n "${public_webhook_domain}" ]; then
-    apt-get install -y caddy
+if [ "${enable_caddy_https}" = "true" ] && [ "${enable_persistent_caddy_storage}" = "true" ] && [ -n "${caddy_data_disk_name}" ]; then
+  CADDY_DISK_PATH="/dev/disk/by-id/google-${caddy_data_disk_name}"
+  for _ in $(seq 1 30); do
+    if [ -b "$${CADDY_DISK_PATH}" ]; then
+      break
+    fi
+    sleep 1
+  done
 
-    if [ -n "${caddy_acme_email}" ]; then
-      cat >/etc/caddy/Caddyfile <<EOF
-{
-  email ${caddy_acme_email}
-}
-
-${public_webhook_domain} {
-  reverse_proxy 127.0.0.1:${webhook_port}
-}
-EOF
-    else
-      cat >/etc/caddy/Caddyfile <<EOF
-${public_webhook_domain} {
-  reverse_proxy 127.0.0.1:${webhook_port}
-}
-EOF
+  if [ -b "$${CADDY_DISK_PATH}" ]; then
+    if ! blkid "$${CADDY_DISK_PATH}" >/dev/null 2>&1; then
+      mkfs.ext4 -F "$${CADDY_DISK_PATH}"
     fi
 
-    systemctl enable caddy
-    systemctl restart caddy
+    install -d -m 0755 /var/lib/caddy
+    CADDY_DISK_UUID="$(blkid -s UUID -o value "$${CADDY_DISK_PATH}")"
+    if [ -n "$${CADDY_DISK_UUID}" ] && ! grep -q "$${CADDY_DISK_UUID}" /etc/fstab; then
+      echo "UUID=$${CADDY_DISK_UUID} /var/lib/caddy ext4 defaults,nofail 0 2" >> /etc/fstab
+    fi
+    mountpoint -q /var/lib/caddy || mount /var/lib/caddy || true
   else
-    echo "Caddy HTTPS enabled but public_webhook_domain is empty; skipping Caddy config."
+    echo "Persistent Caddy disk '$${CADDY_DISK_PATH}' not found; using boot disk storage."
+  fi
+fi
+
+if [ "${enable_caddy_https}" = "true" ]; then
+  if [ -n "${public_service_domain}" ]; then
+    apt-get install -y caddy
+    if [ "${enable_persistent_caddy_storage}" = "true" ] && mountpoint -q /var/lib/caddy; then
+      chown -R caddy:caddy /var/lib/caddy
+    fi
+
+    CADDYFILE_TMP="$(mktemp)"
+    cat >"$${CADDYFILE_TMP}" <<EOF_CADDY
+${public_service_domain} {
+  tls {
+    issuer acme {
+      dir ${caddy_acme_ca}
+EOF_CADDY
+    if [ -n "${caddy_acme_email}" ]; then
+      cat >>"$${CADDYFILE_TMP}" <<EOF_CADDY
+      email ${caddy_acme_email}
+EOF_CADDY
+    fi
+    cat >>"$${CADDYFILE_TMP}" <<EOF_CADDY
+    }
+  }
+  reverse_proxy 127.0.0.1:${service_port}
+}
+EOF_CADDY
+
+    if [ -f /etc/caddy/Caddyfile ] && cmp -s "$${CADDYFILE_TMP}" /etc/caddy/Caddyfile; then
+      echo "Caddyfile unchanged; skipping caddy reload."
+      rm -f "$${CADDYFILE_TMP}"
+      systemctl enable caddy
+      if ! systemctl is-active --quiet caddy; then
+        systemctl start caddy
+      fi
+    else
+      install -m 0644 "$${CADDYFILE_TMP}" /etc/caddy/Caddyfile
+      rm -f "$${CADDYFILE_TMP}"
+      caddy validate --config /etc/caddy/Caddyfile
+      systemctl enable caddy
+      if systemctl is-active --quiet caddy; then
+        systemctl reload caddy || systemctl restart caddy
+      else
+        systemctl start caddy
+      fi
+    fi
+  else
+    echo "Caddy HTTPS enabled but public_service_domain is empty; skipping Caddy config."
   fi
 fi
 
@@ -87,7 +132,9 @@ if [ "${enable_tailscale}" = "true" ]; then
   fi
 
   if [ -n "$${TS_AUTH_KEY}" ]; then
-    tailscale up --authkey="$${TS_AUTH_KEY}" "$${TS_ARGS[@]}"
+    if ! tailscale up --authkey="$${TS_AUTH_KEY}" "$${TS_ARGS[@]}"; then
+      echo "Tailscale auth failed; continuing bootstrap without an active tailnet session."
+    fi
   else
     echo "Tailscale enabled but auth key unavailable; run 'sudo tailscale up ...' manually."
   fi
@@ -99,9 +146,9 @@ if [ "${write_telegram_env_file}" = "true" ] && [ -n "${telegram_bot_token_secre
     TELEGRAM_ENV_DIR="$(dirname "${telegram_env_file_path}")"
     install -d -m 0750 "$${TELEGRAM_ENV_DIR}"
     umask 177
-    cat >"${telegram_env_file_path}" <<EOF
+    cat >"${telegram_env_file_path}" <<EOF_TG
 TELEGRAM_BOT_TOKEN=$${TG_BOT_TOKEN}
-EOF
+EOF_TG
     chmod 0600 "${telegram_env_file_path}"
   else
     echo "Telegram secret '${telegram_bot_token_secret_id}' unavailable; skipping telegram env file."
@@ -114,10 +161,10 @@ if [ "${write_inference_env_file}" = "true" ] && [ -n "${anthropic_api_key_secre
     INFERENCE_ENV_DIR="$(dirname "${inference_env_file_path}")"
     install -d -m 0750 "$${INFERENCE_ENV_DIR}"
     umask 177
-    cat >"${inference_env_file_path}" <<EOF
+    cat >"${inference_env_file_path}" <<EOF_INF
 ANTHROPIC_API_KEY=$${ANTHROPIC_API_KEY_VALUE}
 OPENCLAW_PRIMARY_MODEL=${openclaw_primary_model}
-EOF
+EOF_INF
     chmod 0600 "${inference_env_file_path}"
   else
     echo "Anthropic secret '${anthropic_api_key_secret_id}' unavailable; skipping inference env file."
@@ -130,10 +177,10 @@ if [ "${write_claude_code_env_file}" = "true" ] && [ -n "${claude_code_anthropic
     CLAUDE_CODE_ENV_DIR="$(dirname "${claude_code_env_file_path}")"
     install -d -m 0750 "$${CLAUDE_CODE_ENV_DIR}"
     umask 177
-    cat >"${claude_code_env_file_path}" <<EOF
+    cat >"${claude_code_env_file_path}" <<EOF_CC
 ANTHROPIC_API_KEY=$${CLAUDE_CODE_API_KEY_VALUE}
 CLAUDE_CODE_MODEL=${claude_code_model}
-EOF
+EOF_CC
     chmod 0600 "${claude_code_env_file_path}"
   else
     echo "Claude Code secret '${claude_code_anthropic_api_key_secret_id}' unavailable; skipping Claude Code env file."
@@ -171,6 +218,11 @@ if [ -n "${bootstrap_repo_url}" ]; then
   git fetch --all --tags
   git checkout "${bootstrap_repo_ref}"
   git pull --ff-only origin "${bootstrap_repo_ref}" || true
+
+  if [ ! -f ".env" ] && [ -f ".env.example" ]; then
+    cp .env.example .env
+    chmod 0600 .env
+  fi
 
   if [ -f "${bootstrap_compose_file}" ]; then
     systemctl daemon-reload

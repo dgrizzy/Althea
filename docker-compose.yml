@@ -7,11 +7,3 @@ services:
       - .env
     ports:
       - "8080:8080"
-    depends_on:
-      - mock-openclaw
-
-  mock-openclaw:
-    image: hashicorp/http-echo:1.0.0
-    command: ["-listen=:8081", "-type=application/json", "-text={\"status\":\"accepted\",\"run_id\":\"mock-run-123\"}"]
-    ports:
-      - "8081:8081"

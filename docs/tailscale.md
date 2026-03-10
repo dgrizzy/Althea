@@ -47,4 +47,4 @@ Then access OpenClaw locally at `http://127.0.0.1:18789`.
 
 - Prefer tagged auth keys with expiry.
 - Keep Telegram allowlist and exec approvals enabled.
-- Keep public firewall scoped to Althea ingress only.
+- Keep public firewall scoped to the minimum required service ports.

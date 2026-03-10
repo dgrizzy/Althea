@@ -1,13 +1,13 @@
 compose := "docker compose"
 
-# Build and start Althea + mock OpenClaw
+# Build and start Althea
 deploy:
-    {{compose}} build althea mock-openclaw
-    {{compose}} up -d althea mock-openclaw
+    {{compose}} build althea
+    {{compose}} up -d althea
 
-# Start Althea + mock OpenClaw
+# Start Althea
 start:
-    {{compose}} up -d althea mock-openclaw
+    {{compose}} up -d althea
 
 # Stop and remove local stack
 stop:

@@ -1,31 +1,20 @@
 # OpenClaw Configuration (Althea)
 
-Althea now dispatches directly to OpenClaw's native `/hooks/agent` contract.
+OpenClaw is expected to be controlled directly through its native Telegram bot channel ("Claw Bot").
 
-## Required OpenClaw hook config
+No Althea Telegram webhook endpoint is used in this model.
 
-- Enable hooks in OpenClaw.
-- Set a hook token.
-- Allow the target agent ID used by Althea.
+## Required OpenClaw runtime config
 
-Suggested values:
+- Enable Telegram channel integration in OpenClaw.
+- Restrict allowed Telegram user IDs to your account(s).
+- Keep exec approvals enabled for risky actions.
 
-- `hooks.enabled = true`
-- `hooks.token = <same as OPENCLAW_HOOK_TOKEN>`
-- `hooks.allowedAgentIds = ["main"]`
-- `hooks.allowRequestSessionKey = false` (default path for this repo)
+Suggested values (conceptual):
 
-## Althea env alignment
-
-Set in `.env`:
-
-- `OPENCLAW_HOOK_URL=http://127.0.0.1:18789/hooks/agent`
-- `OPENCLAW_HOOK_TOKEN=<hook token>`
-- `OPENCLAW_HOOK_NAME=GitHub`
-- `OPENCLAW_AGENT_ID=main`
-- `OPENCLAW_HOOK_DELIVER=false`
-- `OPENCLAW_WAKE_MODE=now`
-- `OPENCLAW_ALLOW_REQUEST_SESSION_KEY=false`
+- `telegram.enabled = true`
+- `telegram.allowedUsers = [<your_telegram_user_id>]`
+- `approvals.exec = true`
 
 ## Telegram bot token from Secret Manager
 
@@ -100,11 +89,5 @@ services:
 
 ## Behavior
 
-Althea transforms a GitHub issue into a structured message string and sends:
-
-- `message`
-- `name`
-- `wakeMode`
-- `deliver`
-- optional `agentId`
-- optional `sessionKey` (only if `OPENCLAW_ALLOW_REQUEST_SESSION_KEY=true`)
+- Commands are issued directly in Telegram to OpenClaw.
+- Althea app no longer mediates command ingestion.

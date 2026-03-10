@@ -1,7 +1,6 @@
 # Architecture
 
-- GitHub Issues and Project are the source of truth.
-- GitHub webhooks are the event source.
-- Althea validates webhook signatures, rate limits requests, and rejects replayed delivery IDs.
-- Althea normalizes issue payloads and calls OpenClaw native `/hooks/agent`.
-- GitHub issue labels/comments track lifecycle and status.
+- OpenClaw (self-hosted) is the execution runtime.
+- Telegram ("Claw Bot") is the command and approval interface.
+- Althea app runtime is intentionally minimal (`/healthz` only).
+- Terraform in this repo manages VM/network/secrets/bootstrap concerns.
