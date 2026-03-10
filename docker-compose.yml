@@ -1,9 +1,42 @@
 services:
-  althea:
+  openclaw-gateway:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: docker/openclaw.Dockerfile
+    image: althea-openclaw:local
+    restart: unless-stopped
     env_file:
       - .env
+      - ${OPENCLAW_GATEWAY_ENV_FILE:-/opt/althea/runtime/openclaw.env}
+      - ${TELEGRAM_ENV_FILE:-/opt/althea/runtime/telegram.env}
+      - ${INFERENCE_ENV_FILE:-/opt/althea/runtime/inference.env}
+      - ${CLAUDE_CODE_ENV_FILE:-/opt/althea/runtime/claude-code.env}
+    environment:
+      OPENCLAW_CONFIG_PATH: /srv/openclaw/openclaw.json
+    command:
+      - gateway
+      - --bind
+      - ${OPENCLAW_GATEWAY_BIND:-lan}
+      - --port
+      - "${OPENCLAW_GATEWAY_PORT:-18789}"
     ports:
-      - "8080:8080"
+      - "${OPENCLAW_BIND_HOST:-0.0.0.0}:${OPENCLAW_GATEWAY_PORT:-18789}:18789"
+    volumes:
+      - ./openclaw:/srv/openclaw
+
+  openclaw-cli:
+    image: althea-openclaw:local
+    profiles:
+      - tools
+    env_file:
+      - .env
+      - ${OPENCLAW_GATEWAY_ENV_FILE:-/opt/althea/runtime/openclaw.env}
+      - ${TELEGRAM_ENV_FILE:-/opt/althea/runtime/telegram.env}
+      - ${INFERENCE_ENV_FILE:-/opt/althea/runtime/inference.env}
+      - ${CLAUDE_CODE_ENV_FILE:-/opt/althea/runtime/claude-code.env}
+    environment:
+      OPENCLAW_CONFIG_PATH: /srv/openclaw/openclaw.json
+    entrypoint:
+      - openclaw
+    volumes:
+      - ./openclaw:/srv/openclaw

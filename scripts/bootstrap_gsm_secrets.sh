@@ -55,12 +55,20 @@ add_prompted_secret "amplify-dev-bot-anthropic-api-openclaw" "Enter Anthropic AP
 echo "\n[4/4] Anthropic key for Claude Code"
 add_prompted_secret "amplify-dev-bot-anthropic-api-claude-code" "Enter Anthropic API key for Claude Code"
 
+echo "\n[5/5] OpenClaw gateway token (generated)"
+ensure_secret "amplify-bots-openclaw-gateway-token"
+python3 - <<'PY' | add_version_from_stdin "amplify-bots-openclaw-gateway-token"
+import secrets
+print(secrets.token_urlsafe(48), end="")
+PY
+
 echo "\nSummary (latest 3 versions each)"
 for secret in \
   amplify-bots-tailscale-auth-key \
   telegram-reasonable-dev-bot \
   amplify-dev-bot-anthropic-api-openclaw \
-  amplify-dev-bot-anthropic-api-claude-code
+  amplify-dev-bot-anthropic-api-claude-code \
+  amplify-bots-openclaw-gateway-token
   do
     echo "--- $secret"
     gcloud secrets versions list "$secret" --project="$PROJECT_ID" --limit=3 --format='table(name,state,createTime)'

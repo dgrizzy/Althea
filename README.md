@@ -5,17 +5,17 @@ Althea is now a lightweight runtime/infra shell around self-hosted OpenClaw.
 The GitHub queue path has been removed.  
 Tasking is expected to happen directly through OpenClaw's native Telegram bot ("Claw Bot").
 
-## App behavior
+## Runtime behavior
 
-- Exposes no public API routes.
+- Runs OpenClaw gateway as the primary service.
+- Telegram is handled natively by OpenClaw channels.
 - No GitHub webhook ingestion.
-- No Telegram webhook ingestion.
 
 ## Local run
 
 1. Copy `.env.example` to `.env`.
 2. Start stack: `just deploy`
-3. Check app container is up: `just logs althea`
+3. Check gateway container is up: `just logs openclaw-gateway`
 
 ## OpenClaw + Telegram
 

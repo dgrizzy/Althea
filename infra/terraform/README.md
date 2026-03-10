@@ -7,6 +7,7 @@ This stack provisions a VM-centric OpenClaw runtime host:
 - VM for runtime/bootstrap
 - Service account + IAM bindings
 - Secret Manager secret container for Tailscale auth key
+- Secret Manager secret container for OpenClaw gateway token
 - Optional Tailscale install + auto-join on VM bootstrap
 - Optional Telegram token/inference key/Claude Code key env-file materialization from Secret Manager
 - Optional Caddy HTTPS reverse proxy for the service endpoint
@@ -40,13 +41,14 @@ After apply:
 - Use output `service_url` to get the access target.
 - Ensure `bootstrap_repo_url` points at your deployment repo so startup automation brings up the stack.
 - Lock down `admin_source_ranges` and `service_source_ranges` from `0.0.0.0/0` in production.
+- Keep `enable_iap_ssh = true` so IAP SSH stays available even when `admin_source_ranges` is tightly scoped.
 - Bootstrap will copy `.env.example` to `.env` when missing before starting compose.
 
 Tailscale-only mode:
 
 - `expose_direct_service_port = false`
 - `enable_caddy_https = false`
-- Access service only through SSH/Tailscale tunnel (`http://127.0.0.1:<service_port>`).
+- Access service through tailnet host/IP on `service_port` (default `18789`) or an SSH tunnel.
 
 ## HTTPS reverse proxy pattern (Caddy)
 
@@ -89,6 +91,7 @@ On VM startup, Terraform can materialize env files for your runtime:
 
 - Telegram bot token: `/opt/althea/runtime/telegram.env`
 - OpenClaw inference key + model: `/opt/althea/runtime/inference.env`
+- OpenClaw gateway token/bind/port: `/opt/althea/runtime/openclaw.env`
 - Claude Code key + model: `/opt/althea/runtime/claude-code.env`
 
 These values are fetched from Secret Manager IDs configured in `terraform.tfvars`.

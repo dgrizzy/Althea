@@ -35,13 +35,17 @@ VM startup script fetches this secret using its service account and runs `tailsc
 
 ## Access pattern
 
-After VM boots and joins tailnet:
+After VM boots and joins tailnet, resolve active node/IP:
 
 ```bash
-ssh <vm-tailnet-name> -L 18789:127.0.0.1:18789
+tailscale status
+tailscale ip -4 amplify-bots-vm
 ```
 
-Then access OpenClaw locally at `http://127.0.0.1:18789`.
+Then open OpenClaw UI directly over tailnet:
+
+- `http://<tailscale-ip>:18789`
+- `http://<tailnet-hostname>:18789`
 
 ## Operational notes
 

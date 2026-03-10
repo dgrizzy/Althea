@@ -5,7 +5,7 @@ output "vm_name" {
 
 output "vm_external_ip" {
   value       = google_compute_address.this.address
-  description = "Public static IP for ingress"
+  description = "VM external static IP (used for admin/egress patterns if enabled)"
 }
 
 output "service_url" {

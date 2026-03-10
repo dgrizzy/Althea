@@ -1,0 +1,11 @@
+{
+  gateway: {
+    mode: "local"
+  },
+  channels: {
+    telegram: {
+      enabled: true,
+      dmPolicy: "pairing"
+    }
+  }
+}

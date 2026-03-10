@@ -4,7 +4,7 @@ zone                            = "us-central1-a"
 name_prefix                     = "amplify-bots"
 machine_type                    = "e2-standard-2"
 boot_disk_size_gb               = 40
-service_port                    = 8080
+service_port                    = 18789
 expose_direct_service_port      = false
 enable_caddy_https              = false
 public_service_domain           = ""
@@ -16,6 +16,7 @@ caddy_data_disk_type            = "pd-balanced"
 
 # Update these before apply.
 admin_source_ranges   = ["203.0.113.10/32"]
+enable_iap_ssh        = true
 service_source_ranges = ["0.0.0.0/0"]
 
 ssh_username   = "amplify-admin"
@@ -37,10 +38,14 @@ telegram_bot_token_secret_id = "telegram-reasonable-dev-bot"
 write_telegram_env_file      = true
 telegram_env_file_path       = "/opt/althea/runtime/telegram.env"
 
-anthropic_api_key_secret_id = "amplify-dev-bot-anthropic-api-openclaw"
-write_inference_env_file    = true
-inference_env_file_path     = "/opt/althea/runtime/inference.env"
-openclaw_primary_model      = "haiku"
+anthropic_api_key_secret_id      = "amplify-dev-bot-anthropic-api-openclaw"
+write_inference_env_file         = true
+inference_env_file_path          = "/opt/althea/runtime/inference.env"
+openclaw_primary_model           = "haiku"
+openclaw_gateway_token_secret_id = ""
+write_openclaw_gateway_env_file  = true
+openclaw_gateway_env_file_path   = "/opt/althea/runtime/openclaw.env"
+openclaw_gateway_bind            = "lan"
 
 claude_code_anthropic_api_key_secret_id = "amplify-dev-bot-anthropic-api-claude-code"
 write_claude_code_env_file              = true

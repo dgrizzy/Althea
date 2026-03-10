@@ -16,10 +16,12 @@ locals {
     "secretmanager.googleapis.com",
     "iamcredentials.googleapis.com",
     "logging.googleapis.com",
+    "iap.googleapis.com",
   ])
 
   secret_ids = {
-    tailscale_auth_key = "${var.name_prefix}-tailscale-auth-key"
+    tailscale_auth_key     = "${var.name_prefix}-tailscale-auth-key"
+    openclaw_gateway_token = "${var.name_prefix}-openclaw-gateway-token"
   }
 
   merged_metadata = merge(
@@ -32,9 +34,11 @@ locals {
     }
   )
 
+  ssh_source_ranges = var.enable_iap_ssh ? distinct(concat(var.admin_source_ranges, ["35.235.240.0/20"])) : var.admin_source_ranges
+
   service_url = (
     var.enable_caddy_https && var.public_service_domain != ""
-    ? "https://${var.public_service_domain}/healthz"
+    ? "https://${var.public_service_domain}"
     : (
       var.expose_direct_service_port
       ? "http://${google_compute_address.this.address}:${var.service_port}"
@@ -67,7 +71,7 @@ resource "google_compute_subnetwork" "this" {
 resource "google_compute_firewall" "allow_ssh" {
   name          = "${var.name_prefix}-allow-ssh"
   network       = google_compute_network.this.name
-  source_ranges = var.admin_source_ranges
+  source_ranges = local.ssh_source_ranges
   target_tags   = ["althea-vm"]
 
   allow {
@@ -217,6 +221,10 @@ resource "google_compute_instance" "this" {
     write_inference_env_file                = var.write_inference_env_file
     inference_env_file_path                 = var.inference_env_file_path
     openclaw_primary_model                  = var.openclaw_primary_model
+    openclaw_gateway_token_secret_id        = var.openclaw_gateway_token_secret_id != "" ? var.openclaw_gateway_token_secret_id : local.secret_ids["openclaw_gateway_token"]
+    write_openclaw_gateway_env_file         = var.write_openclaw_gateway_env_file
+    openclaw_gateway_env_file_path          = var.openclaw_gateway_env_file_path
+    openclaw_gateway_bind                   = var.openclaw_gateway_bind
     claude_code_anthropic_api_key_secret_id = var.claude_code_anthropic_api_key_secret_id
     write_claude_code_env_file              = var.write_claude_code_env_file
     claude_code_env_file_path               = var.claude_code_env_file_path

@@ -45,6 +45,12 @@ variable "admin_source_ranges" {
   default     = ["0.0.0.0/0"]
 }
 
+variable "enable_iap_ssh" {
+  description = "Include Google's IAP TCP forwarding source range for SSH access"
+  type        = bool
+  default     = true
+}
+
 variable "service_source_ranges" {
   description = "CIDR ranges allowed to reach the public service endpoint"
   type        = list(string)
@@ -52,9 +58,9 @@ variable "service_source_ranges" {
 }
 
 variable "service_port" {
-  description = "TCP port where the app is exposed when using direct ingress"
+  description = "TCP port for OpenClaw gateway endpoint"
   type        = number
-  default     = 8080
+  default     = 18789
 }
 
 variable "expose_direct_service_port" {
@@ -242,6 +248,30 @@ variable "openclaw_primary_model" {
   description = "Primary model identifier hint for OpenClaw runtime (set to your preferred Haiku model id)"
   type        = string
   default     = "haiku"
+}
+
+variable "openclaw_gateway_token_secret_id" {
+  description = "Existing Secret Manager secret ID containing OpenClaw gateway token (defaults to <name_prefix>-openclaw-gateway-token)"
+  type        = string
+  default     = ""
+}
+
+variable "write_openclaw_gateway_env_file" {
+  description = "Write OpenClaw gateway auth env vars into a locked-down env file on VM startup"
+  type        = bool
+  default     = true
+}
+
+variable "openclaw_gateway_env_file_path" {
+  description = "Absolute path for generated OpenClaw gateway env file"
+  type        = string
+  default     = "/opt/althea/runtime/openclaw.env"
+}
+
+variable "openclaw_gateway_bind" {
+  description = "OpenClaw gateway bind mode"
+  type        = string
+  default     = "lan"
 }
 
 variable "claude_code_anthropic_api_key_secret_id" {

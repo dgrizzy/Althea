@@ -4,6 +4,9 @@ OpenClaw is expected to be controlled directly through its native Telegram bot c
 
 No Althea Telegram webhook endpoint is used in this model.
 
+The runtime stack now includes an `openclaw-gateway` service in [docker-compose.yml](/Users/davidgriswold/Desktop/Althea/docker-compose.yml).
+Gateway port defaults to `18789`.
+
 ## Required OpenClaw runtime config
 
 - Enable Telegram channel integration in OpenClaw.
@@ -66,26 +69,18 @@ with:
 
 Use this env file for the Claude Code runtime/process (keep it separate from OpenClaw inference env if you want clean key isolation).
 
-Example compose wiring:
+Additional gateway env is written to:
 
-```yaml
-services:
-  openclaw:
-    image: <openclaw-image>
-    env_file:
-      - /opt/althea/runtime/telegram.env
-      - /opt/althea/runtime/inference.env
-```
+- `/opt/althea/runtime/openclaw.env`
 
-If you run a separate Claude Code sidecar/process, add:
+with:
 
-```yaml
-services:
-  claude-code:
-    image: <claude-code-image>
-    env_file:
-      - /opt/althea/runtime/claude-code.env
-```
+- `OPENCLAW_GATEWAY_TOKEN=<token>`
+- `GOG_KEYRING_PASSWORD=<token>`
+- `OPENCLAW_GATEWAY_BIND=lan`
+- `OPENCLAW_GATEWAY_PORT=18789`
+
+If secret lookup is unavailable, startup will generate a local token once and reuse it from this file.
 
 ## Behavior
 

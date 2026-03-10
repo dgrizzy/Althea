@@ -16,6 +16,7 @@ Althea infrastructure is provisioned via Terraform under `infra/terraform`.
 1. Copy `infra/terraform/terraform.tfvars.example` to `infra/terraform/terraform.tfvars`.
 2. Set `project_id`, `admin_source_ranges`, and `bootstrap_repo_url`.
    For Tailscale-only mode, set `expose_direct_service_port=false` and `enable_caddy_https=false`.
+   Keep `service_port=18789` for OpenClaw gateway.
    If using HTTPS endpoint on the VM, set `enable_caddy_https=true` and `public_service_domain`.
 3. Run:
    - `just infra-init`
@@ -30,6 +31,7 @@ Althea infrastructure is provisioned via Terraform under `infra/terraform`.
 - Keep OpenClaw private on loopback.
 - Use Secret Manager for sensitive values.
 - Prefer TLS endpoint (`enable_caddy_https=true`) if exposing VM endpoints publicly.
+- Prefer Tailscale-only access and remove public DNS records if you do not need internet ingress.
 - Telegram token can be sourced from `telegram-reasonable-dev-bot` into `/opt/althea/runtime/telegram.env`.
 - Anthropic key can be sourced from `amplify-dev-bot-anthropic-api-openclaw` into `/opt/althea/runtime/inference.env`.
 - Claude Code Anthropic key can be sourced from `amplify-dev-bot-anthropic-api-claude-code` into `/opt/althea/runtime/claude-code.env`.

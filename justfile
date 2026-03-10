@@ -1,20 +1,20 @@
 compose := "docker compose"
 
-# Build and start Althea
+# Build and start OpenClaw stack
 deploy:
-    {{compose}} build althea
-    {{compose}} up -d althea
+    {{compose}} build openclaw-gateway
+    {{compose}} up -d openclaw-gateway
 
-# Start Althea
+# Start OpenClaw gateway
 start:
-    {{compose}} up -d althea
+    {{compose}} up -d openclaw-gateway
 
 # Stop and remove local stack
 stop:
     {{compose}} down
 
-# Follow logs (default service: althea)
-logs service="althea":
+# Follow logs (default service: openclaw-gateway)
+logs service="openclaw-gateway":
     {{compose}} logs -f --tail=200 {{service}}
 
 # Run test suite
