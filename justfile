@@ -36,3 +36,15 @@ infra-apply dir="infra/terraform" tfvars="terraform.tfvars":
 # Terraform destroy
 infra-destroy dir="infra/terraform" tfvars="terraform.tfvars":
     cd {{dir}} && terraform destroy -var-file="{{tfvars}}"
+
+# Install NumPy in gcloud python for IAP tunnel throughput
+iap-install-numpy:
+    ./scripts/install_gcloud_numpy.sh
+
+# SSH to VM through IAP with automatic troubleshoot fallback
+iap-ssh instance project zone command="":
+    if [ -n "{{command}}" ]; then ./scripts/gcloud_iap_ssh.sh "{{instance}}" "{{project}}" "{{zone}}" --command "{{command}}"; else ./scripts/gcloud_iap_ssh.sh "{{instance}}" "{{project}}" "{{zone}}"; fi
+
+# Deploy from VM using IAP SSH with troubleshooting
+gpu-deploy instance="transcription-service-dev" project="amplify-dev-483403" zone="us-central1-a" remote_dir="/opt/althea/app":
+    ./scripts/gcloud_iap_ssh.sh "{{instance}}" "{{project}}" "{{zone}}" --command "cd {{remote_dir}} && just deploy"

@@ -10,6 +10,9 @@
 - Infra plan: `just infra-plan`
 - Infra apply: `just infra-apply`
 - Infra destroy: `just infra-destroy`
+- Install NumPy for gcloud IAP tunnel performance: `just iap-install-numpy`
+- SSH through IAP with auto-troubleshoot: `just iap-ssh <instance> <project> <zone>`
+- VM deploy through IAP: `just gpu-deploy`
 
 ## Health
 
@@ -22,3 +25,13 @@
 - Keep Telegram/OpenClaw provider API keys in Secret Manager.
 - Keep exec approvals enabled for destructive actions.
 - Keep Tailscale SSH/private admin access enabled; avoid broad public SSH CIDRs.
+- Keep `dangerouslyAllowHostHeaderOriginFallback` disabled in `openclaw/openclaw.json`.
+
+## IAP SSH failure triage
+
+If you see `failed to connect to backend` / `Failed to connect to port 22`:
+
+1. Run `just iap-ssh <instance> <project> <zone>` to execute SSH and troubleshoot flow.
+2. Confirm firewall allows TCP/22 from IAP CIDR `35.235.240.0/20`.
+3. Confirm VM is running in the expected zone and `sshd` is healthy.
+4. Install NumPy (`just iap-install-numpy`) to improve tunnel upload bandwidth.

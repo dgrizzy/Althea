@@ -32,6 +32,7 @@ Althea infrastructure is provisioned via Terraform under `infra/terraform`.
 - Use Secret Manager for sensitive values.
 - Prefer TLS endpoint (`enable_caddy_https=true`) if exposing VM endpoints publicly.
 - Prefer Tailscale-only access and remove public DNS records if you do not need internet ingress.
+- Keep `enable_iap_ssh = true` and IAP firewall source range `35.235.240.0/20` in place for SSH fallback.
 - Telegram token can be sourced from `telegram-reasonable-dev-bot` into `/opt/althea/runtime/telegram.env`.
 - Anthropic key can be sourced from `amplify-dev-bot-anthropic-api-openclaw` into `/opt/althea/runtime/inference.env`.
 - GitHub App private key can be sourced from `amplify-bots-github-app-private-key` into `/opt/althea/runtime/github-app.pem`.
@@ -44,3 +45,8 @@ Bootstrap helper:
 
 - `scripts/bootstrap_gsm_secrets.sh` prompts for required keys and writes them as Secret Manager versions.
 - GitHub App-specific runbook: [docs/github-app.md](/Users/davidgriswold/Desktop/Althea/docs/github-app.md)
+
+IAP helper scripts:
+
+- `scripts/install_gcloud_numpy.sh` installs NumPy into gcloud's Python for better IAP TCP upload performance.
+- `scripts/gcloud_iap_ssh.sh` runs `gcloud compute ssh --tunnel-through-iap` and automatically runs `--troubleshoot` on failure.

@@ -4,7 +4,7 @@ OpenClaw is expected to be controlled directly through its native Telegram bot c
 
 No Althea Telegram webhook endpoint is used in this model.
 
-The runtime stack now includes an `openclaw-gateway` service in [docker-compose.yml](/Users/davidgriswold/Desktop/Althea/docker-compose.yml).
+The runtime stack now includes an `openclaw-gateway` service in [docker-compose.yml](../docker-compose.yml).
 Gateway port defaults to `18789`.
 
 ## Persistence model
@@ -27,6 +27,7 @@ tar -czf /opt/althea/runtime/openclaw-home-backup.tgz -C /opt/althea/app opencla
 - Enable Telegram channel integration in OpenClaw.
 - Restrict allowed Telegram user IDs to your account(s).
 - Keep exec approvals enabled for risky actions.
+- Keep `gateway.controlUi.dangerouslyAllowHostHeaderOriginFallback` disabled.
 
 Suggested values (conceptual):
 
