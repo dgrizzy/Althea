@@ -44,6 +44,7 @@ After apply:
 - Lock down `admin_source_ranges` and `service_source_ranges` from `0.0.0.0/0` in production.
 - Keep `enable_iap_ssh = true` so IAP SSH stays available even when `admin_source_ranges` is tightly scoped.
 - Bootstrap will copy `.env.example` to `.env` when missing before starting compose.
+- For better IAP tunnel upload performance, install NumPy in the gcloud Python runtime: `./scripts/install_gcloud_numpy.sh`.
 
 Tailscale-only mode:
 

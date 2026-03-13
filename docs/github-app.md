@@ -63,15 +63,19 @@ terraform -chdir=infra/terraform apply -var-file=terraform.tfvars
 Run:
 
 ```bash
-gcloud compute ssh amplify-bots-vm --project amplify-bots --zone us-central1-a \
-  --command 'cd /opt/althea/app && ./scripts/validate_github_app_runtime.sh'
+just iap-ssh amplify-bots-vm amplify-bots us-central1-a "cd /opt/althea/app && ./scripts/validate_github_app_runtime.sh"
 ```
 
 Optional repo-scope check:
 
 ```bash
-gcloud compute ssh amplify-bots-vm --project amplify-bots --zone us-central1-a \
-  --command 'cd /opt/althea/app && ./scripts/validate_github_app_runtime.sh app-openclaw-gateway-1 dgrizzy/Amplify'
+just iap-ssh amplify-bots-vm amplify-bots us-central1-a "cd /opt/althea/app && ./scripts/validate_github_app_runtime.sh app-openclaw-gateway-1 dgrizzy/Amplify"
 ```
 
 If repo check fails with 404/403, the app is installed but not allowed on that repo.
+
+If IAP SSH upload performance is slow, run:
+
+```bash
+just iap-install-numpy
+```

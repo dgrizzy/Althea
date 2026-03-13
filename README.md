@@ -17,6 +17,7 @@ Tasking is expected to happen directly through OpenClaw's native Telegram bot ("
 1. Copy `.env.example` to `.env`.
 2. Start stack: `just deploy`
 3. Check gateway container is up: `just logs openclaw-gateway`
+4. Default bind host is loopback (`127.0.0.1`) for safer local exposure.
 
 ## OpenClaw + Telegram
 
@@ -29,3 +30,8 @@ Use OpenClaw's own Telegram channel configuration for command/control and approv
 ## Infra
 
 Terraform remains in `infra/terraform` for VM/network/secrets/runtime bootstrap.
+
+Useful ops helpers:
+
+- Install NumPy for better IAP tunnel throughput: `just iap-install-numpy`
+- SSH over IAP with auto-troubleshoot: `just iap-ssh <instance> <project> <zone>`
