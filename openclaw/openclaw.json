@@ -2,7 +2,7 @@
   gateway: {
     mode: "local",
     controlUi: {
-      dangerouslyAllowHostHeaderOriginFallback: true
+      dangerouslyAllowHostHeaderOriginFallback: false
     }
   },
   channels: {
