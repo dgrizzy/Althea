@@ -82,8 +82,10 @@ Use `sessions_spawn` with `runtime="subagent"`:
 - ✅ Make recommended improvements
 - ✅ Single squashed commit
 - ✅ Leave PR open (don't merge or approve)
+- ✅ Use AMPLIFY_GITHUB_PAT env var (loaded at startup)
 - ❌ Don't approve own work
 - ❌ Don't merge PR
+- ❌ Don't access secrets directly — they're already available
 
 ## Output Expectations
 

@@ -20,59 +20,60 @@ Perform git operations (push, clone, PR actions) using credentials from GCP Secr
 ## How It Works
 
 ```
+Container Startup (entrypoint.sh runs)
+    ├─ Authenticates to GCP using service account
+    ├─ Retrieves AMPLIFY_GITHUB_PAT from Secret Manager
+    └─ Exports as environment variable
+
 Skill invoked (e.g., PR Feedback Executor)
     ↓
-Load secure-secret-retriever.sh
-    ↓
-Retrieve token from GCP Secret Manager
+Read AMPLIFY_GITHUB_PAT from environment
     ↓
 Set up git environment (never logs token)
     ↓
 Execute git operations (push, clone, etc.)
     ↓
-Clean up credentials
-    ↓
 Log audit trail (no token exposure)
 ```
 
+**Key difference:** Secrets are retrieved once at startup, not on-demand. Skills just use env vars.
+
 ## Requirements
 
-1. **GCP Secret Manager** configured (see `deploy/SECRET_MANAGER_SETUP.md`)
-2. **gcloud CLI** installed (auto-installed by retriever script)
+1. **OpenClaw deployed with updated Dockerfile** (gcloud CLI + entrypoint.sh installed)
+2. **GCP Secret Manager** configured with `amplify_github_pat` secret
 3. **Service account** with `secretmanager.secretAccessor` role
-4. **Secret name** (e.g., `amplify_github_pat`)
+4. **GOOGLE_CLOUD_PROJECT** env var set in deployment
+5. **Container started** — secrets automatically loaded as env vars
+
+See `deploy/SECRET_MANAGER_SETUP.md` for setup details.
 
 ## Usage in Skills
 
-### In Python
+### In Python (Recommended)
 
 ```python
 import subprocess
-from pathlib import Path
+import os
 
-def get_secret(secret_name: str) -> str:
-    """Retrieve from GCP Secret Manager."""
-    result = subprocess.run(
-        ["gcloud", "secrets", "versions", "access", "latest", f"--secret={secret_name}"],
-        capture_output=True,
-        text=True,
-        check=True
-    )
-    return result.stdout.strip()
-
-def git_clone_secure(url_base: str, secret_name: str, target_dir: str) -> None:
-    """Clone repo using Secret Manager credentials."""
-    token = get_secret(secret_name)
+def git_clone_secure(url_base: str, target_dir: str) -> None:
+    """Clone repo using env var credentials."""
+    token = os.environ.get("AMPLIFY_GITHUB_PAT")
+    if not token:
+        raise RuntimeError("AMPLIFY_GITHUB_PAT not found. Check container startup.")
+    
     full_url = f"https://{token}@{url_base}"
     subprocess.run(["git", "clone", full_url, target_dir], check=True)
-    # Token is never logged (it's in the subprocess call, not in logs)
 
-def git_push_secure(repo_dir: str, branch: str, secret_name: str) -> None:
-    """Push branch using Secret Manager credentials."""
-    token = get_secret(secret_name)
-    env = {**os.environ, "GIT_CREDENTIALS_TOKEN": token}
+def git_push_secure(repo_dir: str, branch: str) -> str:
+    """Push branch using env var credentials."""
+    token = os.environ.get("AMPLIFY_GITHUB_PAT")
+    if not token:
+        raise RuntimeError("AMPLIFY_GITHUB_PAT not found. Check container startup.")
     
-    # Push using remote with credentials
+    env = {**os.environ, "GIT_ASKPASS": "echo"}
+    env["GIT_PASSWORD"] = token
+    
     result = subprocess.run(
         ["git", "-C", repo_dir, "push", "origin", branch],
         env=env,
@@ -81,22 +82,22 @@ def git_push_secure(repo_dir: str, branch: str, secret_name: str) -> None:
         check=True
     )
     
-    # Clean up env
-    del env["GIT_CREDENTIALS_TOKEN"]
-    
     return result.stdout
 ```
 
-### In Bash
+### In Bash (Recommended)
 
 ```bash
 #!/usr/bin/env bash
-source scripts/secure-secret-retriever.sh
+
+if [ -z "$AMPLIFY_GITHUB_PAT" ]; then
+    echo "ERROR: AMPLIFY_GITHUB_PAT not found. Check container startup."
+    exit 1
+fi
 
 # Clone repo
 url_base="github.com/amplify-dental-ai/Amplify.git"
-git_url=$(git_url_with_creds "$url_base" "amplify_github_pat")
-git clone "$git_url" /tmp/Amplify
+git clone "https://${AMPLIFY_GITHUB_PAT}@${url_base}" /tmp/Amplify
 
 # Work on repo
 cd /tmp/Amplify
@@ -107,19 +108,16 @@ git commit -m "feat: something"
 
 # Push
 git push -u origin feat/something
-
-# Clean up
-cleanup_credentials
 ```
 
 ## Key Guarantees
 
 ✅ **Token never logged** — Subprocess calls keep token out of logs  
 ✅ **Token never in git history** — Uses remote URLs, not .git/config  
-✅ **Token never on disk** — Retrieved at runtime, stored only in memory  
-✅ **Environment cleaned** — Unset vars after use  
-✅ **Audit trail** — GCP logs all Secret Manager accesses (without exposing token)  
-✅ **No hardcoding** — Uses environment variables and Secret Manager  
+✅ **Token never on disk** — Loaded into memory at startup only  
+✅ **Single retrieval** — Secret retrieved once at container startup, not per-skill  
+✅ **Audit trail** — GCP logs Secret Manager access once at startup  
+✅ **No hardcoding** — Uses environment variables only  
 
 ## Audit Logging
 
@@ -154,11 +152,11 @@ except subprocess.CalledProcessError as e:
 
 The `pr-feedback-executor` skill uses this pattern:
 
-1. Retrieve `amplify_github_pat` from Secret Manager
-2. Clone amplify-dental-ai/Amplify using secure method
+1. Get `AMPLIFY_GITHUB_PAT` from environment (already loaded at startup)
+2. Clone amplify-dental-ai/Amplify using env var
 3. Execute feedback changes
-4. Push using secure method
-5. Clean up credentials
+4. Push using env var
+5. No cleanup needed (env var persists for other skills)
 
 See `skills/pr-feedback-executor/SKILL.md` for full workflow.
 

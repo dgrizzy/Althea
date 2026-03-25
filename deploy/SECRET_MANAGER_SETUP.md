@@ -7,21 +7,30 @@
 ## Architecture
 
 ```
-OpenClaw Service Account
-    ↓
-    ├─ (has secretmanager.secretAccessor role)
-    ↓
-GCP Secret Manager
-    ├─ amplify_github_pat (GitHub PAT for amplify-dental-ai org)
-    ├─ [other secrets as needed]
-    ↓
-scripts/secure-secret-retriever.sh
-    ├─ Retrieves secrets at runtime (never stored on disk)
-    ├─ Masks tokens in logs
-    ├─ Provides secure env vars
-    ↓
-Git operations (clone, push, PR feedback, etc.)
+OpenClaw Deployment
+    ├─ Dockerfile
+    │   ├─ Installs gcloud CLI
+    │   └─ Sets up entrypoint.sh
+    │
+    ├─ scripts/entrypoint.sh (runs at container startup)
+    │   ├─ Authenticates to GCP using service account
+    │   ├─ Retrieves secrets from Secret Manager (once)
+    │   └─ Exports as env vars (AMPLIFY_GITHUB_PAT, etc.)
+    │
+    ├─ OpenClaw Service Account
+    │   └─ (has secretmanager.secretAccessor role)
+    │
+    ├─ GCP Secret Manager
+    │   ├─ amplify_github_pat (GitHub PAT for amplify-dental-ai org)
+    │   └─ [other secrets as needed]
+    │
+    └─ OpenClaw Runtime
+        ├─ All skills/subagents have access to env vars
+        ├─ Skills use AMPLIFY_GITHUB_PAT directly (no API calls)
+        └─ Git operations (clone, push, PR feedback, etc.)
 ```
+
+**Key benefit:** Secrets retrieved once at startup. Skills just use environment variables. No direct secret API calls from individual skills.
 
 ---
 
@@ -62,72 +71,106 @@ gcloud secrets add-iam-policy-binding amplify_github_pat \
 gcloud secrets get-iam-policy amplify_github_pat
 ```
 
-### 3. Install gcloud CLI in OpenClaw Container (One-time, in deployment)
+### 3. Dockerfile Already Configured
 
-The `scripts/secure-secret-retriever.sh` script will auto-install gcloud if needed, but for reliability, add to your Docker image:
+The `Dockerfile` in this repo already:
+- ✅ Installs gcloud CLI at build time
+- ✅ Sets up `scripts/entrypoint.sh` as the container entrypoint
+- ✅ Entrypoint retrieves secrets at startup and exports as env vars
 
-```dockerfile
-# In your Dockerfile (or deployment config)
-RUN curl https://sdk.cloud.google.com | bash
-RUN gcloud components install beta
-```
+No additional Docker changes needed!
 
-### 4. Set Environment Variable in Deployment (One-time, in deployment)
+### 4. Set Environment Variable in Deployment
 
-OpenClaw needs to know the GCP project:
+OpenClaw needs to know the GCP project. Set in your deployment config:
 
 ```bash
 # In your deployment config (.env, docker-compose, Cloud Run, etc.)
 export GOOGLE_CLOUD_PROJECT="your-gcp-project-id"
 ```
 
-If using Application Default Credentials (recommended):
+**For Cloud Run:**
 ```bash
-# Cloud Run automatically sets this
-# Local: gcloud auth application-default login
+gcloud run deploy openclaw \
+  --set-env-vars=GOOGLE_CLOUD_PROJECT=your-gcp-project-id \
+  --service-account=openclaw@your-project.iam.gserviceaccount.com \
+  ...
+```
+
+**For Docker Compose:**
+```yaml
+services:
+  openclaw:
+    image: openclaw:latest
+    environment:
+      - GOOGLE_CLOUD_PROJECT=your-gcp-project-id
+    # Uses service account credentials from GOOGLE_APPLICATION_CREDENTIALS
+```
+
+**For local development:**
+```bash
+export GOOGLE_CLOUD_PROJECT="your-gcp-project-id"
+gcloud auth application-default login
+docker build -t openclaw .
+docker run -e GOOGLE_CLOUD_PROJECT openclaw
 ```
 
 ---
 
 ## Usage
 
-### In OpenClaw Code
+### In Skills / Subagents (Recommended)
+
+**Secrets are already available as environment variables at runtime.**
 
 ```python
-import subprocess
+# Python
 import os
 
-def get_secret(secret_name: str) -> str:
-    """Retrieve secret from GCP Secret Manager."""
-    result = subprocess.run(
-        ["gcloud", "secrets", "versions", "access", "latest", f"--secret={secret_name}"],
-        capture_output=True,
-        text=True,
-        check=True
-    )
-    return result.stdout.strip()
+github_pat = os.environ.get("AMPLIFY_GITHUB_PAT")
+if not github_pat:
+    raise RuntimeError("AMPLIFY_GITHUB_PAT not found. Secret not retrieved at startup.")
 
-# Usage
-github_pat = get_secret("amplify_github_pat")
+# Use it directly
+git_url = f"https://{github_pat}@github.com/amplify-dental-ai/Amplify.git"
+subprocess.run(["git", "clone", git_url, "/tmp/Amplify"], check=True)
 ```
-
-### In Bash Scripts
 
 ```bash
-source scripts/secure-secret-retriever.sh
+# Bash
+if [ -z "$AMPLIFY_GITHUB_PAT" ]; then
+    echo "ERROR: AMPLIFY_GITHUB_PAT not found. Secret not retrieved at startup."
+    exit 1
+fi
 
-# Retrieve a secret
-token=$(get_secret "amplify_github_pat")
-
-# Set up git credentials
-setup_github_credentials "amplify_github_pat" "amplify-dental-ai"
-
-# Use git
-git clone https://${GIT_CREDENTIALS_TOKEN}@github.com/amplify-dental-ai/Amplify.git
-
-# Clean up
-cleanup_credentials
+# Use directly
+git clone "https://${AMPLIFY_GITHUB_PAT}@github.com/amplify-dental-ai/Amplify.git" /tmp/Amplify
 ```
+
+### For One-Off Secret Retrieval (Advanced)
+
+If you need to retrieve a secret at runtime (not recommended for performance):
+
+```bash
+# Bash - source the helper script
+source scripts/secure-secret-retriever.sh
+token=$(get_secret "some_secret")
+```
+
+```python
+# Python - use subprocess
+import subprocess
+
+result = subprocess.run(
+    ["gcloud", "secrets", "versions", "access", "latest", "--secret=some_secret"],
+    capture_output=True,
+    text=True,
+    check=True
+)
+token = result.stdout.strip()
+```
+
+**Note:** This is not recommended. Prefer using env vars loaded at startup.
 
 ---
 
