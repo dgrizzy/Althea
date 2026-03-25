@@ -15,6 +15,13 @@
 - VM deploy through IAP: `just gpu-deploy`
 - Telegram allowlist (no pairing after redeploy): set `openclaw_telegram_allow_from_user_ids` in `infra/terraform/terraform.tfvars`, then `just infra-apply` and **reboot the VM** so the updated startup script runs.
 
+## OpenClaw memory / persistence triage
+
+- **On the VM** (after IAP SSH or direct SSH), run: `sudo ALTHEA_APP_ROOT=/opt/althea/app ./scripts/diagnose-openclaw-memory.sh` from the bootstrapped repo (or copy the script path accordingly).
+- **Locally**, inspect Terraform state / disks: `./scripts/check-terraform-vm-state.sh`
+- If the **VM was replaced** by Terraform, anything that lived only on the **boot disk** under `/opt/althea/app/openclaw/home` is gone unless you already used a **persistent OpenClaw data disk** (`enable_persistent_openclaw_storage`).
+- **Apply infra changes** that add or resize the OpenClaw disk: `just infra-plan` / `just infra-apply`, then **reboot the VM** so the updated startup script runs.
+
 ## Health
 
 - `GET /healthz` must return `{"status":"ok"}`.

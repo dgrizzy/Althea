@@ -49,7 +49,7 @@ After changing this variable, run `terraform apply` and **reboot the instance** 
 - GitHub App IDs can be set in Terraform and written into `/opt/althea/runtime/github.env`.
 - GitHub PAT can be sourced from `github_pat` into `/opt/althea/runtime/github.env` as `GH_TOKEN`.
 - Claude Code Anthropic key can be sourced from `amplify-dev-bot-anthropic-api-claude-code` into `/opt/althea/runtime/claude-code.env`.
-- OpenClaw runtime state is persisted on disk at `openclaw/home` (mounted to `/root/.openclaw`).
+- OpenClaw runtime state is persisted on disk at `OPENCLAW_HOME_DIR` (mounted to `/root/.openclaw` in compose). With `enable_persistent_openclaw_storage` (default `true`), Terraform attaches a dedicated disk mounted at `openclaw_data_mount_path` (default `/mnt/openclaw-data`) so memory survives VM replacement; startup sets `OPENCLAW_HOME_DIR` accordingly. Optional daily backups: `enable_openclaw_home_backup_timer` + [scripts/backup-openclaw-home.sh](../scripts/backup-openclaw-home.sh).
 
 Bootstrap helper:
 

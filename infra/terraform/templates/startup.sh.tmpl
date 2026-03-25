@@ -4,7 +4,7 @@ set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
 
 apt-get update -y
-apt-get install -y ca-certificates curl gnupg lsb-release git python3
+apt-get install -y ca-certificates curl gnupg lsb-release git python3 rsync
 
 fetch_secret_latest() {
   local project_id="$1"
@@ -58,6 +58,31 @@ if [ "${enable_caddy_https}" = "true" ] && [ "${enable_persistent_caddy_storage}
     mountpoint -q /var/lib/caddy || mount /var/lib/caddy || true
   else
     echo "Persistent Caddy disk '$${CADDY_DISK_PATH}' not found; using boot disk storage."
+  fi
+fi
+
+if [ "${enable_persistent_openclaw_storage}" = "true" ] && [ -n "${openclaw_data_disk_name}" ]; then
+  OPENCLAW_DISK_PATH="/dev/disk/by-id/google-${openclaw_data_disk_name}"
+  for _ in $(seq 1 30); do
+    if [ -b "$${OPENCLAW_DISK_PATH}" ]; then
+      break
+    fi
+    sleep 1
+  done
+
+  if [ -b "$${OPENCLAW_DISK_PATH}" ]; then
+    if ! blkid "$${OPENCLAW_DISK_PATH}" >/dev/null 2>&1; then
+      mkfs.ext4 -F "$${OPENCLAW_DISK_PATH}"
+    fi
+
+    install -d -m 0755 ${openclaw_data_mount_path}
+    OPENCLAW_DISK_UUID="$(blkid -s UUID -o value "$${OPENCLAW_DISK_PATH}")"
+    if [ -n "$${OPENCLAW_DISK_UUID}" ] && ! grep -q "$${OPENCLAW_DISK_UUID}" /etc/fstab; then
+      echo "UUID=$${OPENCLAW_DISK_UUID} ${openclaw_data_mount_path} ext4 defaults,nofail 0 2" >> /etc/fstab
+    fi
+    mountpoint -q ${openclaw_data_mount_path} || mount ${openclaw_data_mount_path} || true
+  else
+    echo "Persistent OpenClaw disk '$${OPENCLAW_DISK_PATH}' not found; using boot disk for OPENCLAW_HOME."
   fi
 fi
 
@@ -343,9 +368,54 @@ PY
     chmod 0600 .env
   fi
 
+  if [ "${enable_persistent_openclaw_storage}" = "true" ] && mountpoint -q ${openclaw_data_mount_path}; then
+    install -d -m 0755 ${openclaw_data_mount_path}/home ${openclaw_data_mount_path}/backups
+    REPO_HOME="${bootstrap_repo_dir}/openclaw/home"
+    if [ -d "$${REPO_HOME}" ] && [ -n "$(ls -A "$${REPO_HOME}" 2>/dev/null || true)" ] && [ -z "$(ls -A ${openclaw_data_mount_path}/home 2>/dev/null || true)" ]; then
+      echo "Migrating OpenClaw home from repo to persistent disk..."
+      rsync -a "$${REPO_HOME}/" ${openclaw_data_mount_path}/home/
+    fi
+    ENV_FILE="${bootstrap_repo_dir}/.env"
+    if [ -f "$${ENV_FILE}" ]; then
+      if grep -q '^OPENCLAW_HOME_DIR=' "$${ENV_FILE}"; then
+        sed -i "s|^OPENCLAW_HOME_DIR=.*|OPENCLAW_HOME_DIR=${openclaw_data_mount_path}/home|" "$${ENV_FILE}"
+      else
+        printf '\nOPENCLAW_HOME_DIR=%s/home\n' "${openclaw_data_mount_path}" >> "$${ENV_FILE}"
+      fi
+    fi
+  fi
+
   if [ -f "${bootstrap_compose_file}" ]; then
     systemctl daemon-reload
     systemctl enable althea-stack.service
     systemctl start althea-stack.service
+  fi
+
+  if [ "${enable_openclaw_home_backup_timer}" = "true" ] && [ "${enable_persistent_openclaw_storage}" = "true" ] && mountpoint -q ${openclaw_data_mount_path} && [ -x "${bootstrap_repo_dir}/scripts/backup-openclaw-home.sh" ]; then
+    install -m 0755 "${bootstrap_repo_dir}/scripts/backup-openclaw-home.sh" /usr/local/sbin/althea-backup-openclaw-home.sh
+    cat >/etc/systemd/system/althea-openclaw-home-backup.service <<EOF_OC_BAK
+[Unit]
+Description=Backup OpenClaw home directory
+
+[Service]
+Type=oneshot
+Environment=ALTHEA_APP_ROOT=${bootstrap_repo_dir}
+Environment=OPENCLAW_BACKUP_ROOT=${openclaw_data_mount_path}/backups
+ExecStart=/usr/local/sbin/althea-backup-openclaw-home.sh
+EOF_OC_BAK
+    cat >/etc/systemd/system/althea-openclaw-home-backup.timer <<'EOF_OC_TMR'
+[Unit]
+Description=Daily backup of OpenClaw home
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF_OC_TMR
+    systemctl daemon-reload
+    systemctl enable althea-openclaw-home-backup.timer
+    systemctl start althea-openclaw-home-backup.timer || true
   fi
 fi

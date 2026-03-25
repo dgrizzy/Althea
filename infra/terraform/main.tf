@@ -5,11 +5,12 @@ provider "google" {
 }
 
 locals {
-  network_name    = "${var.name_prefix}-vpc"
-  subnet_name     = "${var.name_prefix}-subnet"
-  vm_name         = "${var.name_prefix}-vm"
-  service_account = "${var.name_prefix}-vm-sa"
-  caddy_data_disk = "${var.name_prefix}-caddy-data"
+  network_name       = "${var.name_prefix}-vpc"
+  subnet_name        = "${var.name_prefix}-subnet"
+  vm_name            = "${var.name_prefix}-vm"
+  service_account    = "${var.name_prefix}-vm-sa"
+  caddy_data_disk    = "${var.name_prefix}-caddy-data"
+  openclaw_data_disk = "${var.name_prefix}-openclaw-data"
 
   required_services = toset([
     "compute.googleapis.com",
@@ -121,6 +122,15 @@ resource "google_compute_disk" "caddy_data" {
   size = var.caddy_data_disk_size_gb
 }
 
+resource "google_compute_disk" "openclaw_data" {
+  count = var.enable_persistent_openclaw_storage ? 1 : 0
+
+  name = local.openclaw_data_disk
+  zone = var.zone
+  type = var.openclaw_data_disk_type
+  size = var.openclaw_data_disk_size_gb
+}
+
 resource "google_service_account" "vm" {
   account_id   = local.service_account
   display_name = "${var.name_prefix} VM Service Account"
@@ -191,6 +201,15 @@ resource "google_compute_instance" "this" {
     }
   }
 
+  dynamic "attached_disk" {
+    for_each = var.enable_persistent_openclaw_storage ? [1] : []
+    content {
+      source      = google_compute_disk.openclaw_data[0].id
+      mode        = "READ_WRITE"
+      device_name = google_compute_disk.openclaw_data[0].name
+    }
+  }
+
   service_account {
     email  = google_service_account.vm.email
     scopes = var.vm_oauth_scopes
@@ -214,6 +233,10 @@ resource "google_compute_instance" "this" {
     caddy_acme_ca                           = var.caddy_acme_ca
     enable_persistent_caddy_storage         = var.enable_persistent_caddy_storage
     caddy_data_disk_name                    = local.caddy_data_disk
+    enable_persistent_openclaw_storage      = var.enable_persistent_openclaw_storage
+    openclaw_data_disk_name                 = try(google_compute_disk.openclaw_data[0].name, "")
+    openclaw_data_mount_path                = var.openclaw_data_mount_path
+    enable_openclaw_home_backup_timer       = var.enable_openclaw_home_backup_timer
     service_port                            = var.service_port
     telegram_bot_token_secret_id            = var.telegram_bot_token_secret_id
     write_telegram_env_file                 = var.write_telegram_env_file
@@ -246,6 +269,7 @@ resource "google_compute_instance" "this" {
     google_project_iam_member.vm_secret_accessor,
     google_project_iam_member.vm_log_writer,
     google_compute_disk.caddy_data,
+    google_compute_disk.openclaw_data,
     google_compute_firewall.allow_service,
     google_compute_firewall.allow_service_https,
   ]

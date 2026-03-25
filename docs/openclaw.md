@@ -20,10 +20,30 @@ OpenClaw runtime state is persisted outside the container filesystem via:
 This keeps memory/session history/workspace and channel credentials durable across
 container restarts/recreates.
 
-Backup/restore example (on VM):
+### GCP / Terraform (recommended)
+
+Terraform can attach a **dedicated persistent disk** for OpenClaw state so it survives
+**VM replacement** (boot disk wipe). See `enable_persistent_openclaw_storage` and
+`openclaw_data_mount_path` in [infra/terraform/variables.tf](../infra/terraform/variables.tf).
+The VM startup script mounts the disk (default `/mnt/openclaw-data`) and rewrites
+`.env` to `OPENCLAW_HOME_DIR=/mnt/openclaw-data/home`, migrating any existing data
+from `${bootstrap_repo_dir}/openclaw/home` once.
+
+Optional: `enable_openclaw_home_backup_timer` installs a **daily systemd timer** that
+runs [scripts/backup-openclaw-home.sh](../scripts/backup-openclaw-home.sh) into
+`/mnt/openclaw-data/backups/`.
+
+### Manual backup/restore (on VM)
 
 ```bash
 tar -czf /opt/althea/runtime/openclaw-home-backup.tgz -C /opt/althea/app openclaw/home
+```
+
+With persistent disk (typical after Terraform defaults):
+
+```bash
+./scripts/backup-openclaw-home.sh
+# or inspect /mnt/openclaw-data/backups/openclaw-home-*.tgz
 ```
 
 ## Required OpenClaw runtime config

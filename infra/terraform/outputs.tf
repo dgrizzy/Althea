@@ -25,3 +25,8 @@ output "caddy_data_disk_name" {
   value       = try(google_compute_disk.caddy_data[0].name, null)
   description = "Persistent disk name used for Caddy cert/state storage"
 }
+
+output "openclaw_data_disk_name" {
+  value       = try(google_compute_disk.openclaw_data[0].name, null)
+  description = "Persistent disk name used for OpenClaw home (memory/sessions/workspace)"
+}

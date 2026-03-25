@@ -111,6 +111,36 @@ variable "caddy_data_disk_type" {
   default     = "pd-balanced"
 }
 
+variable "enable_persistent_openclaw_storage" {
+  description = "Attach a dedicated persistent disk for OpenClaw home (sessions/memory/workspace) so it survives VM replacement"
+  type        = bool
+  default     = true
+}
+
+variable "openclaw_data_disk_size_gb" {
+  description = "Size of dedicated persistent disk for OpenClaw runtime state"
+  type        = number
+  default     = 20
+}
+
+variable "openclaw_data_disk_type" {
+  description = "Disk type for dedicated persistent OpenClaw state disk"
+  type        = string
+  default     = "pd-balanced"
+}
+
+variable "openclaw_data_mount_path" {
+  description = "Host mount path for the OpenClaw persistent data disk"
+  type        = string
+  default     = "/mnt/openclaw-data"
+}
+
+variable "enable_openclaw_home_backup_timer" {
+  description = "Install a daily systemd timer to tar OpenClaw home (requires scripts/backup-openclaw-home.sh in the bootstrapped repo)"
+  type        = bool
+  default     = true
+}
+
 variable "ssh_username" {
   description = "Username for injected SSH public key"
   type        = string

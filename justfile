@@ -48,3 +48,12 @@ iap-ssh instance project zone command="":
 # Deploy from VM using IAP SSH with troubleshooting
 gpu-deploy instance="transcription-service-dev" project="amplify-dev-483403" zone="us-central1-a" remote_dir="/opt/althea/app":
     ./scripts/gcloud_iap_ssh.sh "{{instance}}" "{{project}}" "{{zone}}" --command "cd {{remote_dir}} && just deploy"
+
+# Inspect Terraform for VM/disk resources (local; requires terraform state)
+openclaw-terraform-check:
+    ./scripts/check-terraform-vm-state.sh
+
+# Remote OpenClaw persistence diagnostics (run on VM via IAP SSH)
+# Example: just openclaw-diagnose-remote instance=amplify-bots-vm project=my-proj zone=us-central1-a
+openclaw-diagnose-remote instance project zone remote_dir="/opt/althea/app":
+    ./scripts/gcloud_iap_ssh.sh "{{instance}}" "{{project}}" "{{zone}}" --command "cd {{remote_dir}} && sudo bash scripts/diagnose-openclaw-memory.sh"

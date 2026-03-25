@@ -14,6 +14,14 @@ enable_persistent_caddy_storage = true
 caddy_data_disk_size_gb         = 10
 caddy_data_disk_type            = "pd-balanced"
 
+# OpenClaw memory/sessions/workspace: dedicated disk survives VM replacement (recommended).
+enable_persistent_openclaw_storage = true
+openclaw_data_disk_size_gb         = 20
+openclaw_data_disk_type            = "pd-balanced"
+openclaw_data_mount_path           = "/mnt/openclaw-data"
+# Daily systemd timer -> /mnt/openclaw-data/backups (requires scripts/backup-openclaw-home.sh in repo).
+enable_openclaw_home_backup_timer  = true
+
 # Lock these down in real environments.
 admin_source_ranges   = ["203.0.113.10/32"]
 enable_iap_ssh        = true
