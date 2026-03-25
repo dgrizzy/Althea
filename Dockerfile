@@ -1,15 +1,35 @@
-FROM python:3.12-slim
+FROM node:22-alpine
 
-WORKDIR /srv/althea
+# Install system dependencies
+RUN apk add --no-cache \
+    python3 \
+    py3-pip \
+    bash \
+    curl \
+    git \
+    jq
 
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+# Install gcloud CLI
+RUN curl https://sdk.cloud.google.com | bash && \
+    /root/google-cloud-sdk/bin/gcloud components install beta && \
+    ln -s /root/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud
 
-COPY pyproject.toml README.md /srv/althea/
-RUN pip install --no-cache-dir .
+# Set working directory
+WORKDIR /app
 
-COPY app /srv/althea/app
+# Copy application files
+COPY . .
 
-EXPOSE 8080
+# Install dependencies
+RUN npm ci
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+# Create entrypoint script
+COPY scripts/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Expose port (adjust as needed)
+EXPOSE 3000
+
+# Use entrypoint to retrieve secrets and start app
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["npm", "start"]
