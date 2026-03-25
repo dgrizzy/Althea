@@ -4,8 +4,8 @@ This repo supports a standard Tailscale deployment pattern for GCP VM-based Alth
 
 ## Goal
 
-- Keep OpenClaw on loopback only.
-- Reach OpenClaw UI/API over private Tailnet access.
+- Keep the published gateway port bound to loopback on the VM host.
+- Reach OpenClaw UI over private Tailnet HTTPS.
 - Reuse the same pattern for future single-VM agent deployments.
 
 ## Terraform settings
@@ -39,13 +39,29 @@ After VM boots and joins tailnet, resolve active node/IP:
 
 ```bash
 tailscale status
-tailscale ip -4 amplify-bots-vm
+tailscale ip -4
+sudo tailscale serve status
 ```
 
-Then open OpenClaw UI directly over tailnet:
+Preferred access is Tailscale Serve over HTTPS:
 
-- `http://<tailscale-ip>:18789`
-- `http://<tailnet-hostname>:18789`
+- `https://<tailnet-hostname>/`
+
+For the current `amplify-bots-vm` deployment, Tailscale Serve proxies:
+
+- `https://amplify-bots-vm-1-1.tail4f8fba.ts.net/`
+- to `http://127.0.0.1:18789`
+
+OpenClaw Control UI requires a secure browser context for device identity, so
+plain `http://<tailscale-ip>:18789` is not a supported Control UI entrypoint.
+Use the tokenized dashboard URL from:
+
+```bash
+sudo docker exec app-openclaw-gateway-1 openclaw dashboard --no-open
+```
+
+That prints a `#token=...` URL you can swap onto the HTTPS Tailscale Serve
+origin.
 
 ## Operational notes
 

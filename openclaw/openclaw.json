@@ -1,14 +1,27 @@
 {
-  gateway: {
-    mode: "local",
-    controlUi: {
-      dangerouslyAllowHostHeaderOriginFallback: false
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "anthropic/claude-haiku-4-5",
+        "fallbacks": []
+      },
+      "models": {
+        "anthropic/claude-haiku-4-5": {}
+      }
     }
   },
-  channels: {
-    telegram: {
-      enabled: true,
-      dmPolicy: "pairing"
+  "gateway": {
+    "mode": "local",
+    "trustedProxies": ["172.18.0.1"],
+    "controlUi": {
+      "dangerouslyAllowHostHeaderOriginFallback": false,
+      "allowedOrigins": ["https://amplify-bots-vm-1-1.tail4f8fba.ts.net"]
+    }
+  },
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "dmPolicy": "pairing"
     }
   }
 }

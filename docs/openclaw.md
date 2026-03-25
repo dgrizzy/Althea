@@ -7,6 +7,10 @@ No Althea Telegram webhook endpoint is used in this model.
 The runtime stack now includes an `openclaw-gateway` service in [docker-compose.yml](../docker-compose.yml).
 Gateway port defaults to `18789`.
 
+For the VM deployment, the Docker-published port is expected to stay on host
+loopback and be exposed to browsers through Tailscale Serve HTTPS, not direct
+tailnet HTTP.
+
 ## Persistence model
 
 OpenClaw runtime state is persisted outside the container filesystem via:
@@ -89,6 +93,9 @@ Use this env file for the Claude Code runtime/process (keep it separate from Ope
 
 The container image installs `@anthropic-ai/claude-code`, which exposes the `claude` CLI
 expected by OpenClaw's `coding-agent` skill.
+
+The image now pins known-good OpenClaw and Claude Code versions in
+[docker/openclaw.Dockerfile](/Users/davidgriswold/Desktop/Althea/docker/openclaw.Dockerfile) so rebuilds stay reproducible.
 
 Additional gateway env is written to:
 
