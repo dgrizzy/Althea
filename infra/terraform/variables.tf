@@ -226,6 +226,12 @@ variable "telegram_env_file_path" {
   default     = "/opt/althea/runtime/telegram.env"
 }
 
+variable "openclaw_telegram_allow_from_user_ids" {
+  description = "Telegram user IDs (numeric strings) allowed to DM the bot without pairing. When non-empty, VM startup sets channels.telegram.dmPolicy=allowlist and channels.telegram.allowFrom after each git pull."
+  type        = list(string)
+  default     = []
+}
+
 variable "anthropic_api_key_secret_id" {
   description = "Existing Secret Manager secret ID containing Anthropic API key for OpenClaw inference"
   type        = string

@@ -38,6 +38,9 @@ telegram_bot_token_secret_id = "telegram-reasonable-dev-bot"
 write_telegram_env_file      = true
 telegram_env_file_path       = "/opt/althea/runtime/telegram.env"
 
+# Production: allow DMs without manual pairing after redeploy (numeric Telegram user id).
+openclaw_telegram_allow_from_user_ids = ["8649446913"]
+
 anthropic_api_key_secret_id      = "amplify-dev-bot-anthropic-api-openclaw"
 write_inference_env_file         = true
 inference_env_file_path          = "/opt/althea/runtime/inference.env"

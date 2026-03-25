@@ -218,6 +218,7 @@ resource "google_compute_instance" "this" {
     telegram_bot_token_secret_id            = var.telegram_bot_token_secret_id
     write_telegram_env_file                 = var.write_telegram_env_file
     telegram_env_file_path                  = var.telegram_env_file_path
+    openclaw_telegram_allow_from_user_ids   = jsonencode(var.openclaw_telegram_allow_from_user_ids)
     anthropic_api_key_secret_id             = var.anthropic_api_key_secret_id
     write_inference_env_file                = var.write_inference_env_file
     inference_env_file_path                 = var.inference_env_file_path

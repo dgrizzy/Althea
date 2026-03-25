@@ -307,6 +307,37 @@ if [ -n "${bootstrap_repo_url}" ]; then
   git checkout "${bootstrap_repo_ref}"
   git pull --ff-only origin "${bootstrap_repo_ref}" || true
 
+  # When set in Terraform, skip Telegram pairing on every boot (git pull resets repo defaults).
+  export OC_TG_ALLOW_FROM='${openclaw_telegram_allow_from_user_ids}'
+  python3 <<'PY'
+import json
+import os
+import sys
+from pathlib import Path
+
+raw = os.environ.get("OC_TG_ALLOW_FROM", "[]")
+try:
+    allow_from = json.loads(raw)
+except json.JSONDecodeError as e:
+    print("Invalid OC_TG_ALLOW_FROM JSON:", e, file=sys.stderr)
+    sys.exit(1)
+
+if not allow_from:
+    sys.exit(0)
+
+path = Path("openclaw/openclaw.json")
+if not path.is_file():
+    print("OpenClaw config not found:", path.resolve(), file=sys.stderr)
+    sys.exit(1)
+
+data = json.loads(path.read_text())
+tg = data.setdefault("channels", {}).setdefault("telegram", {})
+tg["dmPolicy"] = "allowlist"
+tg["allowFrom"] = allow_from
+path.write_text(json.dumps(data, indent=2) + "\n")
+print("OpenClaw Telegram: dmPolicy=allowlist, allowFrom=", allow_from)
+PY
+
   if [ ! -f ".env" ] && [ -f ".env.example" ]; then
     cp .env.example .env
     chmod 0600 .env

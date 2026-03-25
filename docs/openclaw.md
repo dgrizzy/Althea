@@ -36,7 +36,7 @@ tar -czf /opt/althea/runtime/openclaw-home-backup.tgz -C /opt/althea/app opencla
 Suggested values (conceptual):
 
 - `telegram.enabled = true`
-- `telegram.allowedUsers = [<your_telegram_user_id>]`
+- `telegram.allowFrom = ["<your_telegram_user_id>"]` with `telegram.dmPolicy = "allowlist"` (pairing is the default in-repo; production can set IDs via Terraform — see [docs/infra.md](infra.md#telegram-pairing-vs-allowlist))
 - `approvals.exec = true`
 
 ## Telegram bot token from Secret Manager

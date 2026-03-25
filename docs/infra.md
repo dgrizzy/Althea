@@ -24,6 +24,16 @@ Althea infrastructure is provisioned via Terraform under `infra/terraform`.
    - `just infra-apply`
 4. If using private admin access, enable the Tailscale pattern in [docs/tailscale.md](/Users/davidgriswold/Desktop/Althea/docs/tailscale.md).
 
+## Telegram pairing vs allowlist
+
+If the bot shows a pairing code after each redeploy, set numeric Telegram user IDs in Terraform:
+
+- `openclaw_telegram_allow_from_user_ids = ["8649446913"]` (example)
+
+On every boot, the VM startup script runs `git pull` then patches `openclaw/openclaw.json` to `dmPolicy: allowlist` and `allowFrom` to that list, so you are not blocked on `openclaw pairing approve` over SSH.
+
+After changing this variable, run `terraform apply` and **reboot the instance** (updated metadata startup scripts do not re-run until restart).
+
 ## Security baseline
 
 - Restrict `admin_source_ranges` to known operator IPs.

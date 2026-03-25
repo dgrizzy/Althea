@@ -13,6 +13,7 @@
 - Install NumPy for gcloud IAP tunnel performance: `just iap-install-numpy`
 - SSH through IAP with auto-troubleshoot: `just iap-ssh <instance> <project> <zone>`
 - VM deploy through IAP: `just gpu-deploy`
+- Telegram allowlist (no pairing after redeploy): set `openclaw_telegram_allow_from_user_ids` in `infra/terraform/terraform.tfvars`, then `just infra-apply` and **reboot the VM** so the updated startup script runs.
 
 ## Health
 

@@ -44,6 +44,7 @@ After apply:
 - Lock down `admin_source_ranges` and `service_source_ranges` from `0.0.0.0/0` in production.
 - Keep `enable_iap_ssh = true` so IAP SSH stays available even when `admin_source_ranges` is tightly scoped.
 - Bootstrap will copy `.env.example` to `.env` when missing before starting compose.
+- Optional: set `openclaw_telegram_allow_from_user_ids` to numeric Telegram user IDs so startup patches OpenClaw to `dmPolicy: allowlist` (no manual `pairing approve` after redeploy). After changing it, `terraform apply` then **reboot the VM** so metadata startup re-runs.
 - For better IAP tunnel upload performance, install NumPy in the gcloud Python runtime: `./scripts/install_gcloud_numpy.sh`.
 
 Tailscale-only mode:

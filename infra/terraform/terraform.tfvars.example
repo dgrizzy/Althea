@@ -41,6 +41,10 @@ telegram_bot_token_secret_id = "telegram-reasonable-dev-bot"
 write_telegram_env_file      = true
 telegram_env_file_path       = "/opt/althea/runtime/telegram.env"
 
+# Skip Telegram pairing for these numeric user IDs (set from @userinfobot / OpenClaw "Your Telegram user id").
+# After apply, reboot the VM (or wait for next recreate) so startup rewrites openclaw/openclaw.json.
+# openclaw_telegram_allow_from_user_ids = ["123456789"]
+
 anthropic_api_key_secret_id = "amplify-dev-bot-anthropic-api-openclaw"
 write_inference_env_file    = true
 inference_env_file_path     = "/opt/althea/runtime/inference.env"
