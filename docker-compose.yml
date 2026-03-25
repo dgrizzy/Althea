@@ -15,6 +15,8 @@ services:
     environment:
       OPENCLAW_CONFIG_PATH: /srv/openclaw/openclaw.json
       OPENCLAW_HOME: /root/.openclaw
+      AMPLIFY_GITHUB_PAT: ${GITHUB_PAT:-}
+      GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
     command:
       - gateway
       - --bind
@@ -41,6 +43,8 @@ services:
     environment:
       OPENCLAW_CONFIG_PATH: /srv/openclaw/openclaw.json
       OPENCLAW_HOME: /root/.openclaw
+      AMPLIFY_GITHUB_PAT: ${GITHUB_PAT:-}
+      GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
     entrypoint:
       - openclaw
     volumes:
